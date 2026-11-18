@@ -636,7 +636,7 @@ function settingsSheet(){const st=D.settings;
 /* ---------- cloud sync (Supabase) ----------
    1 dòng / tài khoản trong bảng ggym_docs (doc jsonb + rev). App vẫn offline-first:
    lưu máy trước, có mạng thì gộp (theo id + thời điểm sửa, có danh sách đã xoá) rồi đẩy lên. */
-const CLOUD0={url:'',key:''}; // điền URL + publishable key để ai cài app cũng có sẵn cấu hình
+const CLOUD0={url:'https://vawfperiksgzgdovbqjt.supabase.co',key:'sb_publishable_hK962oRny9XZbugoqath0Q_xnXqL0Dr'}; // điền URL + publishable key để ai cài app cũng có sẵn cấu hình
 const cloudCfg=()=>{let c=null;try{c=JSON.parse(localStorage.getItem('ggym.cloud')||'null')}catch(e){}return(c&&c.url&&c.key)?c:(CLOUD0.url&&CLOUD0.key?CLOUD0:null)};
 const AKEY=()=>'ggym.auth.'+P.cur;
 const getAuth=()=>{try{return JSON.parse(localStorage.getItem(AKEY())||'null')}catch(e){return null}};
