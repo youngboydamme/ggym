@@ -120,6 +120,12 @@ select
   nullif((b ->> 'ft_ll')::numeric, 0) as fat_left_leg_kg,
   nullif((b ->> 'ft_ll_p')::numeric, 0) as fat_left_leg_pct,
   nullif((b ->> 'ft_rl')::numeric, 0) as fat_right_leg_kg,
-  nullif((b ->> 'ft_rl_p')::numeric, 0) as fat_right_leg_pct
+  nullif((b ->> 'ft_rl_p')::numeric, 0) as fat_right_leg_pct,
+  nullif((b ->> 'c_waist')::numeric, 0) as waist_cm,
+  nullif((b ->> 'c_hip')::numeric, 0) as hip_cm,
+  nullif((b ->> 'c_chest')::numeric, 0) as chest_cm,
+  nullif((b ->> 'c_shld')::numeric, 0) as shoulders_cm,
+  nullif((b ->> 'c_thigh')::numeric, 0) as thigh_cm,
+  nullif((b ->> 'c_arm')::numeric, 0) as upper_arm_cm
 from public.ggym_docs d
 cross join lateral jsonb_array_elements(coalesce(d.doc -> 'body', '[]'::jsonb)) as b;

@@ -211,6 +211,7 @@ body.in-wk .tabs,body.in-wk #mini{display:none}
 .gd{color:var(--grn);font-weight:600}.bd{color:var(--redt);font-weight:600}
 .tiles .gd,.tiles .bd{font-weight:700}
 .imp{margin:0 0 4px;padding-left:18px;font-size:14px;display:grid;gap:4px}
+em.ib.tp{color:var(--mute)}
 em.ib{font-style:normal;font-size:11px;font-weight:700;color:var(--redt);border:1px solid currentColor;border-radius:6px;padding:1px 5px;margin-left:4px;vertical-align:2px}
 .brow{display:flex;align-items:center;gap:12px;min-height:54px;border-bottom:1px solid var(--line);cursor:pointer}
 .brow span{flex:1}
@@ -658,6 +659,14 @@ const BM=[
  {k:'ffm',l:'FFM',en:'Fat Free Mass',u:'kg',lo:15,hi:200,dir:1,g:'comp',al:['ffm','fat free mass','khoi nac','khoi luong nac','luong nac','khoi luong khong mo','lean body mass','lbm']},
  {k:'bmi',l:'BMI',en:'Body Mass Index',u:'',lo:10,hi:70,dir:0,g:'comp',al:['bmi','chi so bmi','body mass index']},
  {k:'whr',l:'WHR',en:'Waist-Hip Ratio',u:'',lo:.5,hi:1.5,dir:-1,g:'comp',d:2,al:['whr','ti le eo hong','ty le eo hong','ti le vong eo vong hong','ty le vong eo vong hong','waist hip ratio']}];
+/* số đo các vòng bằng thước dây (cm) */
+BM.push(
+ {k:'c_waist',l:'Vòng eo',en:'Waist',u:'cm',lo:40,hi:200,dir:-1,g:'tape',al:['vong eo','eo','waist','waist circumference']},
+ {k:'c_hip',l:'Vòng hông / mông',en:'Hip',u:'cm',lo:50,hi:200,dir:0,g:'tape',al:['vong hong','vong mong','hong','mong','vong hong mong','hip','hips','hip circumference','glutes']},
+ {k:'c_chest',l:'Vòng ngực',en:'Chest',u:'cm',lo:50,hi:200,dir:1,g:'tape',al:['vong nguc','nguc','chest','chest circumference']},
+ {k:'c_shld',l:'Vòng vai',en:'Shoulders',u:'cm',lo:70,hi:220,dir:1,g:'tape',al:['vong vai','vai','shoulder','shoulders']},
+ {k:'c_thigh',l:'Vòng đùi',en:'Thigh',u:'cm',lo:25,hi:120,dir:0,g:'tape',al:['vong dui','dui','thigh','thighs']},
+ {k:'c_arm',l:'Vòng bắp tay',en:'Upper arm',u:'cm',lo:15,hi:70,dir:1,g:'tape',al:['vong bap tay','bap tay','vong tay','arm','arms','bicep','biceps','upper arm']});
 /* phân tích từng vùng: nạc / mỡ của tay, thân, chân — kg và % so với mức chuẩn trên phiếu */
 const SEGS=[['la','tay T','Tay trái','left arm',['tay t','tay trai']],['ra','tay P','Tay phải','right arm',['tay p','tay phai']],['tr','thân','Thân','trunk',['than']],['ll','chân T','Chân trái','left leg',['chan t','chan trai']],['rl','chân P','Chân phải','right leg',['chan p','chan phai']]];
 for(const [kd,L,vi,ens,dir] of [['ln','Nạc','nac',['lean mass','lean','segmental lean'],1],['ft','Mỡ','mo',['fat mass','fat','segmental fat'],-1]])
@@ -668,7 +677,8 @@ for(const [kd,L,vi,ens,dir] of [['ln','Nạc','nac',['lean mass','lean','segment
 const BMK=Object.fromEntries(BM.map(m=>[m.k,m]));
 const bmDec=m=>m.d!=null?m.d:1,bmRound=(m,v)=>Math.round(v*10**bmDec(m))/10**bmDec(m);
 const bmFmt=(m,v)=>m.k==='bmr'?fmtVol(v):fx(bmRound(m,v));
-const isIB=b=>BM.some(m=>m.k!=='kg'&&m.k!=='bf'&&b[m.k]);
+const isIB=b=>BM.some(m=>m.k!=='kg'&&m.k!=='bf'&&m.g!=='tape'&&b[m.k]);
+const hasTape=b=>BM.some(m=>m.g==='tape'&&b[m.k]);
 /* chênh lệch có dấu, tô màu theo hướng tốt / xấu của chỉ số (kèm mũi tên nên không chỉ dựa vào màu) */
 function bmDelta(m,v){if(v==null)return '<em class="dv mute">—</em>';const r=bmRound(m,v);if(!r)return '<em class="dv mute">= 0</em>';
  const good=m.dir?(r>0)===(m.dir>0):null;return `<em class="dv ${good===null?'':good?'gd':'bd'}">${r>0?'▲':'▼'} ${m.k==='bmr'?fmtVol(Math.abs(r)):fx(Math.abs(r))}</em>`}
@@ -682,23 +692,27 @@ const hasSeg=b=>BM.some(m=>m.g==='seg'&&b[m.k]);
 function vBody(){
  const s=D.body.slice().sort((a,b)=>a.d-b.d),last=s[s.length-1];
  const has=k=>s.filter(x=>x[k]);
- if(!BMK[S.bm]||BMK[S.bm].g==='seg'||!has(S.bm).length)S.bm='kg';
+ if(!BMK[S.bm]||BMK[S.bm].g==='seg'||!has(S.bm).length)S.bm=(BM.find(x=>x.g!=='seg'&&has(x.k).length)||BMK.kg).k;
  const m=BMK[S.bm],ser=has(m.k),cur=ser[ser.length-1],first=ser[0];
  const ago=Date.now()-30*864e5;let base=first;for(const x of ser)if(x.d<=ago)base=x;
  const lastOf=k=>{const l=has(k);return l.length?l[l.length-1][k]:0};
  const inp=x=>`<label><span>${x.l} <small>${x.u}</small></span><input id="b-${x.k}" inputmode="decimal" placeholder="${lastOf(x.k)?bmFmt(x,lastOf(x.k)):x.k==='kg'?'67':'—'}" autocomplete="off"></label>`;
- const form=`<div class="card"><div class="bform">${inp(BM[0])}${inp(BM[1])}<details class="more full" ${S.bmore?'open':''}><summary>Chỉ số InBody (tuỳ chọn)</summary><div class="bform">${BM.filter(x=>x.g!=='seg'&&x.k!=='kg'&&x.k!=='bf').map(inp).join('')}<details class="more full sub" ${S.bseg?'open':''}><summary>Nạc / mỡ từng vùng</summary><div class="bform">${BM.filter(x=>x.g==='seg').map(inp).join('')}</div></details></div></details><label class="full">Ngày<input id="bd" type="date" value="${ymd(new Date())}"></label><button class="btn red" data-act="body-add">Ghi số đo</button></div></div><div class="row2"><label class="btn">Nhập Excel / CSV<input class="vh" type="file" accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" data-f="imp-body"></label><button class="btn" data-act="bimp-tpl">Tải file mẫu</button></div>`;
- let stats='';
- if(last){
+ const form=`<div class="card"><div class="bform">${inp(BM[0])}${inp(BM[1])}<details class="more full" ${S.bmore?'open':''}><summary>Chỉ số InBody (tuỳ chọn)</summary><div class="bform">${BM.filter(x=>x.g!=='seg'&&x.k!=='kg'&&x.k!=='bf').map(inp).join('')}<details class="more full sub" ${S.bseg?'open':''}><summary>Nạc / mỡ từng vùng</summary><div class="bform">${BM.filter(x=>x.g==='seg').map(inp).join('')}</div></details></div></details><details class="more full tape" ${S.btape?'open':''}><summary>Số đo các vòng (cm)</summary><div class="bform">${BM.filter(x=>x.g==='tape').map(inp).join('')}</div><p class="mute small" style="margin:6px 0 0">Đo bằng thước dây, buổi sáng trước khi ăn. Eo: ngang rốn. Hông / mông: chỗ to nhất. Đùi, bắp tay: chỗ to nhất, cùng một bên mỗi lần.</p></details><label class="full">Ngày<input id="bd" type="date" value="${ymd(new Date())}"></label><button class="btn red" data-act="body-add">Ghi số đo</button></div></div><div class="row2"><label class="btn">Nhập Excel / CSV<input class="vh" type="file" accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" data-f="imp-body"></label><button class="btn" data-act="bimp-tpl">Tải file mẫu</button></div>`;
+ let stats='',tapeH='';
+ if(last&&ser.length){
   const avail=BM.filter(x=>x.g!=='seg'&&has(x.k).length);
   stats+=(avail.length>1?`<div class="chips scroll">${avail.map(x=>`<button class="chip ${x.k===m.k?'on':''}" data-act="bm" data-k="${x.k}">${x.l}</button>`).join('')}</div>`:'')+
   `<div class="tiles t3" style="margin-top:12px"><div><b>${bmFmt(m,cur[m.k])}</b><span>${m.u?m.u+' ':''}hiện tại</span></div><div><b>${bmDelta(m,ser.length>1?cur[m.k]-base[m.k]:null)}</b><span>30 ngày qua</span></div><div><b>${bmDelta(m,ser.length>1?cur[m.k]-first[m.k]:null)}</b><span>từ ${dm(first.d)}</span></div></div>`+
   (ser.length>=2?`<div class="fig" id="bodychart" style="margin-top:8px"></div>`:'');
   /* bảng so sánh: mỗi chỉ số so với lần đo trước đó và lần đo đầu tiên có chỉ số đó */
-  const rows=avail.map(x=>{const l=has(x.k),c=l[l.length-1],p=l[l.length-2],f=l[0];
-   return `<tr><td>${x.l}<small>${[x.u,c===last?'':dm(c.d)].filter(Boolean).join(' · ')}</small></td><td><b>${bmFmt(x,c[x.k])}</b></td><td>${p?bmDelta(x,c[x.k]-p[x.k]):'<span class="mute">—</span>'}</td><td>${l.length>1?bmDelta(x,c[x.k]-f[x.k]):'<span class="mute">—</span>'}</td></tr>`}).join('');
+  const row=x=>{const l=has(x.k),c=l[l.length-1],p=l[l.length-2],f=l[0];
+   return `<tr><td>${x.l}<small>${[x.u,c===last?'':dm(c.d)].filter(Boolean).join(' · ')}</small></td><td><b>${bmFmt(x,c[x.k])}</b></td><td>${p?bmDelta(x,c[x.k]-p[x.k]):'<span class="mute">—</span>'}</td><td>${l.length>1?bmDelta(x,c[x.k]-f[x.k]):'<span class="mute">—</span>'}</td></tr>`};
+  const rows=avail.filter(x=>x.g!=='tape').map(row).join(''),trows=avail.filter(x=>x.g==='tape').map(row).join('');
+  const thd='<thead><tr><th></th><th>Hiện tại</th><th>Lần trước</th><th>Lần đầu</th></tr></thead>';
   const prevD=s.length>1?s[s.length-2].d:0;
-  stats+=`<h2>So sánh các lần đo</h2><p class="mute small" style="margin:4px 0 0">Lần mới nhất ${fmtDate(last.d)}${prevD?', so với lần trước ('+dm(prevD)+') và lần đầu ('+dm(s[0].d)+')':''}. Xanh là thay đổi theo hướng tốt.</p><div class="card"><table class="cmp"><thead><tr><th></th><th>Hiện tại</th><th>Lần trước</th><th>Lần đầu</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  stats+=`<h2>So sánh các lần đo</h2><p class="mute small" style="margin:4px 0 0">Lần mới nhất ${fmtDate(last.d)}${prevD?', so với lần trước ('+dm(prevD)+') và lần đầu ('+dm(s[0].d)+')':''}. Xanh là thay đổi theo hướng tốt.</p>${rows?`<div class="card"><table class="cmp">${thd}<tbody>${rows}</tbody></table></div>`:''}`;
+  if(trows){const tw=s.filter(x=>x.c_waist&&x.c_hip),t=tw[tw.length-1];
+   tapeH=`<h2>Số đo các vòng</h2><div class="card"><table class="cmp">${thd}<tbody>${trows}</tbody></table>${t?`<p class="mute small" style="margin:10px 0 0">Tỉ lệ eo / hông ${fmtDate(t.d)}: <b>${fx(Math.round(t.c_waist/t.c_hip*100)/100)}</b>${tw.length>1?' (lần đầu '+fx(Math.round(tw[0].c_waist/tw[0].c_hip*100)/100)+')':''}</p>`:''}</div>`}
   /* thành phần cơ thể: cơ tăng / mỡ giảm kể từ lần InBody đầu tiên */
   const ib=s.filter(x=>x.smm&&x.fm);
   if(ib.length>=2){const a=ib[0],b=ib[ib.length-1],dm_=r1(b.smm-a.smm),df=r1(b.fm-a.fm),wk=Math.max(1,(b.d-a.d)/(7*864e5));
@@ -707,8 +721,8 @@ function vBody(){
   if(sg.length){const c=sg[sg.length-1],p=sg[sg.length-2];
    stats+=`<h2>Phân tích từng vùng</h2><p class="mute small" style="margin:4px 0 0">Lần đo ${fmtDate(c.d)}${p?', mũi tên so với lần '+dm(p.d):''}. Số % là so với mức chuẩn in trên phiếu InBody.</p><div class="card">${segTable(c,p)}</div>`}
  }
- const list=s.slice().reverse().map(x=>`<div class="brow" data-act="body-open" data-id="${x.id}" role="button" tabindex="0"><span>${fmtDate(x.d)}${isIB(x)?' <em class="ib">InBody</em>':''}</span><small>${x.bf?fx(x.bf)+' % mỡ':''}${x.smm?(x.bf?' · ':'')+fx(x.smm)+' kg cơ':''}</small><b>${fx(x.kg)} kg</b></div>`).join('');
- return hdr('Cơ thể',avBtn(),`<button class="icon" data-act="settings" aria-label="Cài đặt">${ICON.cog}</button>`)+form+stats+
+ const list=s.slice().reverse().map(x=>`<div class="brow" data-act="body-open" data-id="${x.id}" role="button" tabindex="0"><span>${fmtDate(x.d)}${isIB(x)?' <em class="ib">InBody</em>':''}${hasTape(x)?' <em class="ib tp">Vòng</em>':''}</span><small>${x.bf?fx(x.bf)+' % mỡ':''}${x.smm?(x.bf?' · ':'')+fx(x.smm)+' kg cơ':''}</small><b>${x.kg?fx(x.kg)+' kg':x.c_waist?'eo '+fx(x.c_waist):''}</b></div>`).join('');
+ return hdr('Cơ thể',avBtn(),`<button class="icon" data-act="settings" aria-label="Cài đặt">${ICON.cog}</button>`)+form+stats+tapeH+
  `<h2>Các lần đo</h2>`+(list||'<p class="empty">Chưa có số đo nào.</p>');
 }
 /* ---------- views: routine editor ---------- */
@@ -849,8 +863,8 @@ function importBody(rows){
   const k=dayKey(t);byDay.set(k,Object.assign(byDay.get(k)||{d:t},val))}
  const items=[...byDay.values()].sort((a,b)=>a.d-b.d);
  const have=new Map(D.body.map(b=>[dayKey(b.d),b]));
- const upd=items.filter(x=>have.has(dayKey(x.d))),noKg=items.filter(x=>!x.kg&&!have.has(dayKey(x.d)));
- const ok=items.filter(x=>x.kg||have.has(dayKey(x.d)));
+ const upd=items.filter(x=>have.has(dayKey(x.d))),noKg=[];
+ const ok=items;
  if(!ok.length)return sheet(`<h3>Không có lần đo hợp lệ</h3><p>Đọc được cột ${got.map(m=>m.l).join(', ')} nhưng không có dòng nào đủ ngày và số đo${noKg.length?' (lần đo mới cần có cân nặng)':''}.</p><button class="btn red block" data-act="close">Đóng</button>`);
  S.bimp=ok;const L=ok[ok.length-1];
  sheet(`<h3>Nhập số đo cơ thể</h3><p class="cf" style="margin-bottom:6px">Đọc được <b>${ok.length}</b> lần đo, từ ${fmtDate(ok[0].d)} đến ${fmtDate(L.d)}.</p>
@@ -1070,13 +1084,13 @@ const A={
   for(const m of BM){const el=$('#b-'+m.k);const x=el?num(el.value):0;if(!x)continue;if(!(x>=m.lo&&x<=m.hi))return toast(m.l+' không hợp lệ');val[m.k]=x}
   const p=(v||ymd(new Date())).split('-').map(Number),t=new Date(p[0],p[1]-1,p[2],12).getTime();
   const ex=D.body.find(b=>dayKey(b.d)===dayKey(t));
-  if(!val.kg&&!ex)return toast('Nhập cân nặng hợp lệ');
+  if(!Object.keys(val).length)return toast('Nhập ít nhất một số đo');
   if(ex){Object.assign(ex,val);ex.u=Date.now();toast('Đã cập nhật số đo ngày '+dm(t))}else{D.body.push(Object.assign({id:uid(),u:Date.now(),d:t,bf:0},val));toast('Đã ghi số đo')}
   save();render()},
  'body-open':d=>{const b=D.body.find(x=>x.id===d.id);if(!b)return;
   sheet(`<h3>${fmtDate(b.d)}</h3><table class="cmp" style="margin-bottom:8px"><tbody>${BM.filter(m=>m.g!=='seg'&&b[m.k]).map(m=>`<tr><td>${m.l}<small>${m.en}</small></td><td><b>${bmFmt(m,b[m.k])}</b> <span class="mute small">${m.u}</span></td></tr>`).join('')}</tbody></table>${hasSeg(b)?`<p class="lbl">Từng vùng</p>${segTable(b,null)}<div style="height:10px"></div>`:''}
   <button class="btn block" data-act="body-edit" data-id="${b.id}">Sửa lần đo này</button><button class="btn block danger" style="background:none" data-act="body-del" data-id="${b.id}">Xoá lần đo này</button>`)},
- 'body-edit':d=>{const b=D.body.find(x=>x.id===d.id);if(!b)return;closeSheet();S.bmore=isIB(b);S.bseg=hasSeg(b);render();
+ 'body-edit':d=>{const b=D.body.find(x=>x.id===d.id);if(!b)return;closeSheet();S.bmore=isIB(b);S.bseg=hasSeg(b);S.btape=hasTape(b);render();
   for(const m of BM){const el=$('#b-'+m.k);if(el)el.value=b[m.k]?fx(b[m.k]):''}$('#bd').value=ymd(new Date(b.d));scrollTo(0,0);toast('Sửa số rồi bấm Ghi số đo')},
  'bimp-tpl':()=>bodyTemplate(),
  'bimp-ok':()=>{const it=S.bimp||[];S.bimp=null;let n=0,u=0;const have=new Map(D.body.map(b=>[dayKey(b.d),b]));
@@ -1118,7 +1132,7 @@ document.addEventListener('input',e=>{const t=e.target,f=t.dataset.f;if(!f)retur
 document.addEventListener('change',async e=>{const t=e.target,f=t.dataset.f;if(f!=='imp-json'&&f!=='imp-hevy'&&f!=='imp-body')return;const file=t.files&&t.files[0];if(!file)return;
  if(f==='imp-body'){t.value='';try{await readBodyFile(file)}catch(err){toast('Không đọc được file')}return}
  let txt='';try{txt=await file.text()}catch(err){return toast('Không đọc được file')}t.value='';if(f==='imp-json')importJSON(txt);else importHevy(txt)});
-document.addEventListener('toggle',e=>{if(e.target.matches&&e.target.matches('details.more')){if(e.target.classList.contains('sub'))S.bseg=e.target.open;else S.bmore=e.target.open}},true);
+document.addEventListener('toggle',e=>{if(e.target.matches&&e.target.matches('details.more')){const o=e.target.open,c=e.target.classList;if(c.contains('sub'))S.bseg=o;else if(c.contains('tape'))S.btape=o;else S.bmore=o}},true);
 document.addEventListener('focusin',e=>{if(e.target.matches('.row input')){const t=e.target;setTimeout(()=>{try{t.select()}catch(x){}},0)}});
 
 /* ---------- timers, sound, wake lock ---------- */
