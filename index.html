@@ -189,6 +189,26 @@ body.in-wk .tabs,body.in-wk #mini{display:none}
 .bform label{font-size:13px;color:var(--mute);font-weight:600;display:flex;flex-direction:column;gap:4px}
 .bform label.full,.bform .btn{grid-column:1/-1}
 .bform input{height:48px;border-radius:12px;border:1.5px solid var(--line);background:var(--card2);padding:0 12px;font-size:16px;color:var(--ink);width:100%}
+.bform label small{font-weight:500;opacity:.8}
+.more{grid-column:1/-1}
+.more summary{min-height:44px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--redt);cursor:pointer;list-style:none}
+.more summary::-webkit-details-marker{display:none}
+.more summary::before{content:'+';font:700 20px/1 var(--fc);width:16px;text-align:center}
+.more[open] summary::before{content:'−'}
+.more .bform{margin:4px 0 4px}
+.cmp{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+.cmp th{font-size:12px;color:var(--mute);font-weight:600;text-align:right;padding:0 0 8px 6px;white-space:nowrap}
+.cmp td{padding:9px 0 9px 6px;border-top:1px solid var(--line);text-align:right;white-space:nowrap}
+.cmp td:first-child{text-align:left;white-space:normal;padding-left:0}
+.cmp td small{display:block;font-size:12px;color:var(--mute)}
+.cmp td b{font:700 17px/1 var(--fc)}
+.cmp tbody tr:first-child td{border-top:0}
+.cmp thead+tbody tr:first-child td{border-top:1px solid var(--line)}
+.dv{font-style:normal}
+.gd{color:var(--grn);font-weight:600}.bd{color:var(--redt);font-weight:600}
+.tiles .gd,.tiles .bd{font-weight:700}
+.imp{margin:0 0 4px;padding-left:18px;font-size:14px;display:grid;gap:4px}
+em.ib{font-style:normal;font-size:11px;font-weight:700;color:var(--redt);border:1px solid currentColor;border-radius:6px;padding:1px 5px;margin-left:4px;vertical-align:2px}
 .brow{display:flex;align-items:center;gap:12px;min-height:54px;border-bottom:1px solid var(--line);cursor:pointer}
 .brow span{flex:1}
 .brow b{font:700 20px var(--fc);font-variant-numeric:tabular-nums}
@@ -436,7 +456,7 @@ function render(){
 function postRender(){
  const ec=$('#exchart');if(ec){const m=MET[S.met];const pts=exHistory(S.exId).slice().reverse().map(x=>({x:x.w.start,y:m.f(best(x.sets))})).filter(p=>p.y>0);chart(ec,pts,m.u)}
  const sb=$('#statbars');if(sb)bars(sb,statBuckets(),SM[S.sm||'vol']);
- const bc=$('#bodychart');if(bc){const pts=D.body.filter(b=>S.bm==='kg'?b.kg:b.bf).sort((a,b)=>a.d-b.d).map(b=>({x:b.d,y:S.bm==='kg'?b.kg:b.bf}));chart(bc,pts,S.bm==='kg'?'kg':'%')}
+ const bc=$('#bodychart');if(bc){const m=BMK[S.bm]||BMK.kg;const pts=D.body.filter(b=>b[m.k]).sort((a,b)=>a.d-b.d).map(b=>({x:b.d,y:b[m.k]}));chart(bc,pts,m.u)}
 }
 
 /* ---------- illustrations (ảnh: free-exercise-db, public domain) ---------- */
@@ -620,20 +640,52 @@ function vExDetail(){
 }
 
 /* ---------- views: body ---------- */
+/* chỉ số cơ thể: kg/bf có từ trước, phần còn lại là các chỉ số thường có trên phiếu InBody.
+   dir: 1 = tăng là tốt, -1 = giảm là tốt, 0 = trung tính */
+const BM=[
+ {k:'kg',l:'Cân nặng',en:'Weight',u:'kg',lo:20,hi:300,dir:0},
+ {k:'bf',l:'% mỡ',en:'PBF',u:'%',lo:2,hi:70,dir:-1},
+ {k:'smm',l:'Cơ xương',en:'Skeletal Muscle Mass',u:'kg',lo:5,hi:120,dir:1},
+ {k:'fm',l:'Khối mỡ',en:'Body Fat Mass',u:'kg',lo:1,hi:200,dir:-1},
+ {k:'vf',l:'Mỡ nội tạng',en:'Visceral Fat Level',u:'mức',lo:1,hi:30,dir:-1},
+ {k:'tbw',l:'Nước',en:'Total Body Water',u:'kg',lo:5,hi:150,dir:0},
+ {k:'bmr',l:'BMR',en:'Basal Metabolic Rate',u:'kcal',lo:500,hi:5000,dir:1},
+ {k:'sc',l:'Điểm InBody',en:'InBody Score',u:'điểm',lo:20,hi:120,dir:1}];
+const BMK=Object.fromEntries(BM.map(m=>[m.k,m]));
+const bmFmt=(m,v)=>m.k==='bmr'?fmtVol(v):fx(r1(v));
+const isIB=b=>BM.some(m=>m.k!=='kg'&&m.k!=='bf'&&b[m.k]);
+/* chênh lệch có dấu, tô màu theo hướng tốt / xấu của chỉ số (kèm mũi tên nên không chỉ dựa vào màu) */
+function bmDelta(m,v){if(v==null)return '<em class="dv mute">—</em>';const r=r1(v);if(!r)return '<em class="dv mute">= 0</em>';
+ const good=m.dir?(r>0)===(m.dir>0):null;return `<em class="dv ${good===null?'':good?'gd':'bd'}">${r>0?'▲':'▼'} ${m.k==='bmr'?fmtVol(Math.abs(r)):fx(Math.abs(r))}</em>`}
 function vBody(){
- const s=D.body.slice().sort((a,b)=>a.d-b.d),last=s[s.length-1],first=s[0];
- const ago=Date.now()-30*864e5;let base=first;for(const x of s)if(x.d<=ago)base=x;
- const dlt=v=>(v>0?'+':v<0?'−':'±')+fx(Math.abs(r1(v)));
- const hasBf=s.some(x=>x.bf);if(!hasBf)S.bm='kg';
- const n=S.bm==='kg'?s.length:s.filter(x=>x.bf).length;
- return hdr('Cơ thể',avBtn(),`<button class="icon" data-act="settings" aria-label="Cài đặt">${ICON.cog}</button>`)+
- `<div class="card"><div class="bform"><label>Cân nặng (kg)<input id="bw" inputmode="decimal" placeholder="${last?fx(last.kg):'67'}" autocomplete="off"></label><label>% mỡ (tuỳ chọn)<input id="bf" inputmode="decimal" placeholder="${last&&last.bf?fx(last.bf):'—'}" autocomplete="off"></label><label class="full">Ngày<input id="bd" type="date" value="${ymd(new Date())}"></label><button class="btn red" data-act="body-add">Ghi số đo</button></div></div>`+
- (last?`<div class="tiles t3" style="margin-top:12px"><div><b>${fx(last.kg)}</b><span>kg hiện tại</span></div><div><b>${dlt(last.kg-base.kg)}</b><span>kg / 30 ngày</span></div><div><b>${dlt(last.kg-first.kg)}</b><span>kg từ lần đầu</span></div></div>`:'')+
- (hasBf?`<div class="seg"><button class="${S.bm==='kg'?'on':''}" data-act="bm" data-k="kg">Cân nặng</button><button class="${S.bm==='bf'?'on':''}" data-act="bm" data-k="bf">% mỡ</button></div>`:'<div style="height:16px"></div>')+
- (n>=2?`<div class="fig" id="bodychart"></div>`:'')+
- `<h2>Các lần đo</h2>`+(s.slice().reverse().map(x=>`<div class="brow" data-act="body-open" data-id="${x.id}" role="button" tabindex="0"><span>${fmtDate(x.d)}</span><small>${x.bf?fx(x.bf)+' % mỡ':''}</small><b>${fx(x.kg)} kg</b></div>`).join('')||'<p class="empty">Chưa có số đo nào.</p>');
+ const s=D.body.slice().sort((a,b)=>a.d-b.d),last=s[s.length-1];
+ const has=k=>s.filter(x=>x[k]);
+ if(!BMK[S.bm]||!has(S.bm).length)S.bm='kg';
+ const m=BMK[S.bm],ser=has(m.k),cur=ser[ser.length-1],first=ser[0];
+ const ago=Date.now()-30*864e5;let base=first;for(const x of ser)if(x.d<=ago)base=x;
+ const lastOf=k=>{const l=has(k);return l.length?l[l.length-1][k]:0};
+ const inp=x=>`<label><span>${x.l} <small>${x.u}</small></span><input id="b-${x.k}" inputmode="decimal" placeholder="${lastOf(x.k)?bmFmt(x,lastOf(x.k)):x.k==='kg'?'67':'—'}" autocomplete="off"></label>`;
+ const form=`<div class="card"><div class="bform">${inp(BM[0])}${inp(BM[1])}<details class="more full" ${S.bmore?'open':''}><summary>Chỉ số InBody (tuỳ chọn)</summary><div class="bform">${BM.slice(2).map(inp).join('')}</div></details><label class="full">Ngày<input id="bd" type="date" value="${ymd(new Date())}"></label><button class="btn red" data-act="body-add">Ghi số đo</button></div></div><div class="row2"><label class="btn">Nhập Excel / CSV<input class="vh" type="file" accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" data-f="imp-body"></label><button class="btn" data-act="bimp-tpl">Tải file mẫu</button></div>`;
+ let stats='';
+ if(last){
+  const avail=BM.filter(x=>has(x.k).length);
+  stats+=(avail.length>1?`<div class="chips scroll">${avail.map(x=>`<button class="chip ${x.k===m.k?'on':''}" data-act="bm" data-k="${x.k}">${x.l}</button>`).join('')}</div>`:'')+
+  `<div class="tiles t3" style="margin-top:12px"><div><b>${bmFmt(m,cur[m.k])}</b><span>${m.u} hiện tại</span></div><div><b>${bmDelta(m,ser.length>1?cur[m.k]-base[m.k]:null)}</b><span>30 ngày qua</span></div><div><b>${bmDelta(m,ser.length>1?cur[m.k]-first[m.k]:null)}</b><span>từ ${dm(first.d)}</span></div></div>`+
+  (ser.length>=2?`<div class="fig" id="bodychart" style="margin-top:8px"></div>`:'');
+  /* bảng so sánh: mỗi chỉ số so với lần đo trước đó và lần đo đầu tiên có chỉ số đó */
+  const rows=avail.map(x=>{const l=has(x.k),c=l[l.length-1],p=l[l.length-2],f=l[0];
+   return `<tr><td>${x.l}<small>${x.u}${c===last?'':' · '+dm(c.d)}</small></td><td><b>${bmFmt(x,c[x.k])}</b></td><td>${p?bmDelta(x,c[x.k]-p[x.k]):'<span class="mute">—</span>'}</td><td>${l.length>1?bmDelta(x,c[x.k]-f[x.k]):'<span class="mute">—</span>'}</td></tr>`}).join('');
+  const prevD=s.length>1?s[s.length-2].d:0;
+  stats+=`<h2>So sánh các lần đo</h2><p class="mute small" style="margin:4px 0 0">Lần mới nhất ${fmtDate(last.d)}${prevD?', so với lần trước ('+dm(prevD)+') và lần đầu ('+dm(s[0].d)+')':''}. Xanh là thay đổi theo hướng tốt.</p><div class="card"><table class="cmp"><thead><tr><th></th><th>Hiện tại</th><th>Lần trước</th><th>Lần đầu</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  /* thành phần cơ thể: cơ tăng / mỡ giảm kể từ lần InBody đầu tiên */
+  const ib=s.filter(x=>x.smm&&x.fm);
+  if(ib.length>=2){const a=ib[0],b=ib[ib.length-1],dm_=r1(b.smm-a.smm),df=r1(b.fm-a.fm),wk=Math.max(1,(b.d-a.d)/(7*864e5));
+   stats+=`<div class="card ibs"><p class="lbl" style="margin:0 0 6px">Từ lần InBody ${dm(a.d)} đến ${dm(b.d)} (${Math.round(wk)} tuần)</p><div class="tiles"><div><b>${bmDelta(BMK.smm,dm_)}</b><span>kg cơ xương · ${fx(r1(dm_/wk*4))}/tháng</span></div><div><b>${bmDelta(BMK.fm,df)}</b><span>kg mỡ · ${fx(r1(df/wk*4))}/tháng</span></div></div></div>`}
+ }
+ const list=s.slice().reverse().map(x=>`<div class="brow" data-act="body-open" data-id="${x.id}" role="button" tabindex="0"><span>${fmtDate(x.d)}${isIB(x)?' <em class="ib">InBody</em>':''}</span><small>${x.bf?fx(x.bf)+' % mỡ':''}${x.smm?(x.bf?' · ':'')+fx(x.smm)+' kg cơ':''}</small><b>${fx(x.kg)} kg</b></div>`).join('');
+ return hdr('Cơ thể',avBtn(),`<button class="icon" data-act="settings" aria-label="Cài đặt">${ICON.cog}</button>`)+form+stats+
+ `<h2>Các lần đo</h2>`+(list||'<p class="empty">Chưa có số đo nào.</p>');
 }
-
 /* ---------- views: routine editor ---------- */
 function vRoutine(){const r=S.draft;
  return hdr(r.id?'Sửa routine':'Routine mới',`<button class="link" data-act="r-cancel">Huỷ</button>`,`<button class="link strong" data-act="r-save">Lưu</button>`,true)+
@@ -693,9 +745,9 @@ async function exportData(){
 function importJSON(txt){let x;try{x=JSON.parse(txt)}catch(e){return toast('File không phải JSON hợp lệ')}
  if(!x||!Array.isArray(x.workouts)||!Array.isArray(x.exercises))return toast('Không phải bản sao lưu của GGym');
  confirmSheet(`Thay toàn bộ dữ liệu hiện tại bằng bản sao lưu này (${x.workouts.length} buổi tập, ${(x.body||[]).length} lần đo)? Dữ liệu đang có trên máy sẽ bị ghi đè.`,'Khôi phục',()=>{const K=['workouts','body','routines','exercises'],t=Date.now(),keep=new Set(K.flatMap(k=>(x[k]||[]).map(i=>i.id))),del=Object.assign({},D.del,x.del||{}),sy=D.sync;K.forEach(k=>D[k].forEach(i=>{if(!keep.has(i.id))del[i.id]=t}));D=fix(x);K.forEach(k=>D[k].forEach(i=>{i.u=Math.max(i.u||0,t);delete del[i.id]}));D.del=del;D.sync=sy;EXM=null;save();S.view=null;S.tab='home';render();toast('Đã khôi phục')})}
-function parseCSV(t){const rows=[];let row=[],f='',q=false;for(let i=0;i<t.length;i++){const c=t[i];
+function parseCSV(t,dl=','){const rows=[];let row=[],f='',q=false;for(let i=0;i<t.length;i++){const c=t[i];
  if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
- else if(c==='"')q=true;else if(c===','){row.push(f);f=''}
+ else if(c==='"')q=true;else if(c===dl){row.push(f);f=''}
  else if(c==='\n'||c==='\r'){if(c==='\r'&&t[i+1]==='\n')i++;row.push(f);rows.push(row);row=[];f=''}else f+=c}
  if(f!==''||row.length){row.push(f);rows.push(row)}return rows}
 function parseDate(s){s=String(s||'').trim();const m=s.match(/(\d{1,2})\s+([A-Za-z]{3})[a-z]*\.?,?\s+(\d{4}),?\s+(\d{1,2}):(\d{2})/);
@@ -718,6 +770,75 @@ function importHevy(txt){
  confirmSheet(`Tìm thấy <b>${fresh.length}</b> buổi tập mới${all.length>fresh.length?` (bỏ qua ${all.length-fresh.length} buổi trùng)`:''}${newNames.size?`, kèm ${newNames.size} bài tập chưa có trong danh sách`:''}. Nhập vào?`,'Nhập lịch sử',()=>{
   const added=[];for(const w of fresh){const ws={id:uid(),u:Date.now(),name:w.name,start:w.start,end:w.end,routineId:null,src:'hevy',exercises:w.ex.map(e=>{let id=byName.get(norm(e.nm));if(!id){id=uid();const nx={id,u:Date.now(),name:e.nm,group:'Khác',custom:true},rf=autoRef(e.nm);if(rf)nx.ref=rf;D.exercises.push(nx);byName.set(norm(e.nm),id)}return{exId:id,sets:e.sets}})};D.workouts.push(ws);added.push(ws)}
   EXM=null;D.workouts.sort((a,b)=>b.start-a.start);for(const w of D.workouts)w.prs=computePRs(w);save();S.view=null;S.tab='history';render();toast('Đã nhập '+added.length+' buổi tập')})}
+/* ---------- nhập số đo cơ thể / InBody từ Excel hoặc CSV ---------- */
+/* tên cột được so khớp sau khi bỏ dấu, bỏ phần trong ngoặc (đơn vị, viết tắt) và ký tự lạ */
+const BCOL={d:['ngay','ngay do','ngay kiem tra','thoi gian','date','test date','test date time','date time','datetime','measured on','measurement date','time'],
+ kg:['can nang','trong luong','khoi luong','weight','body weight'],
+ bf:['% mo','%mo','phan tram mo','ti le mo','ty le mo','% mo co the','pbf','percent body fat','body fat percentage','body fat percent','body fat %','% body fat','bf %','bf%','%bf'],
+ smm:['co xuong','khoi co xuong','luong co xuong','co xuong kg','smm','skeletal muscle mass','skeletal muscle'],
+ fm:['khoi mo','luong mo','khoi luong mo','mo','body fat mass','bfm','fat mass'],
+ vf:['mo noi tang','muc mo noi tang','visceral fat level','visceral fat','vfl'],
+ tbw:['nuoc','tong luong nuoc','luong nuoc','nuoc trong co the','total body water','tbw'],
+ bmr:['bmr','basal metabolic rate','ti le trao doi chat co ban','trao doi chat co ban'],
+ sc:['diem inbody','diem','inbody score','score']};
+const hKey=h=>norm(String(h||'').replace(/\(.*?\)|\[.*?\]/g,' ')).replace(/[^a-z0-9%]+/g,' ').trim();
+const BAD_COL=/limit|lower|upper|normal|range|min|max|target|control|chuan|muc tieu|dieu chinh|change|thay doi/;
+function bodyCols(head){const keys=head.map(hKey),out={};
+ for(const [k,al] of Object.entries(BCOL)){let i=keys.findIndex(x=>al.includes(x));
+  if(i<0)i=keys.findIndex(x=>x&&!BAD_COL.test(x)&&al.some(a=>a.length>=10&&x.includes(a)));
+  if(i>=0&&!Object.values(out).includes(i))out[k]=i}
+ return out}
+/* ngày: ô ngày của Excel, số serial của Excel, yyyy-mm-dd, dd/mm/yyyy (kiểu Việt Nam), yyyyMMdd[HHmmss] */
+function cellDate(v){if(v instanceof Date&&!isNaN(v))return new Date(v.getFullYear(),v.getMonth(),v.getDate(),12).getTime();
+ if(typeof v==='number'&&v>20000&&v<80000){const d=new Date(Math.round((v-25569)*864e5));return new Date(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),12).getTime()}
+ const s=String(v==null?'':v).trim();if(!s)return null;let m,y,mo,d;
+ if((m=s.match(/^(\d{4})(\d{2})(\d{2})(\d{4,6})?$/)))[y,mo,d]=[+m[1],+m[2],+m[3]];
+ else if((m=s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/)))[y,mo,d]=[+m[1],+m[2],+m[3]];
+ else if((m=s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})/))){y=+m[3];if(y<100)y+=2000;[d,mo]=+m[2]>12?[+m[2],+m[1]]:[+m[1],+m[2]]}
+ else{const t=parseDate(s);if(t==null)return null;const x=new Date(t);[y,mo,d]=[x.getFullYear(),x.getMonth()+1,x.getDate()]}
+ if(!(mo>=1&&mo<=12&&d>=1&&d<=31&&y>1990&&y<2100))return null;return new Date(y,mo-1,d,12).getTime()}
+function cellNum(v,k){if(typeof v==='number')return v;let s=String(v==null?'':v).trim().replace(/[^\d.,-]/g,'');
+ if(k==='bmr'&&/^\d{1,2}[.,]\d{3}$/.test(s))s=s.replace(/[.,]/,''); // 1.685 kcal kiểu Việt Nam
+ return num(s)}
+function importBody(rows){
+ rows=rows.filter(r=>r&&r.some(c=>String(c==null?'':c).trim()!==''));
+ let hi=-1,cols=null;for(let i=0;i<Math.min(rows.length,15);i++){const c=bodyCols(rows[i]);if(c.d!=null&&Object.keys(c).length>=2){hi=i;cols=c;break}}
+ if(!cols)return sheet(`<h3>Không nhận ra file</h3><p>Không tìm thấy dòng tiêu đề có cột <b>Ngày</b> và ít nhất một chỉ số (Cân nặng, % mỡ, Cơ xương…).</p><p class="mute small">Mẹo: tải <b>File mẫu</b> ở tab Cơ thể, dán số liệu vào đúng cột rồi lưu lại dạng .xlsx hoặc CSV UTF-8.</p><button class="btn red block" data-act="close">Đóng</button>`);
+ const head=rows[hi],got=BM.filter(m=>cols[m.k]!=null),used=new Set(Object.values(cols));
+ const skipCols=head.map((h,i)=>used.has(i)?'':String(h||'').trim()).filter(Boolean);
+ const byDay=new Map();let bad=0,badVal=0;
+ for(const r of rows.slice(hi+1)){const t=cellDate(r[cols.d]);if(!t){bad++;continue}const val={};
+  for(const m of got){const x=cellNum(r[cols[m.k]],m.k);if(!x)continue;if(x>=m.lo&&x<=m.hi)val[m.k]=Math.round(x*100)/100;else badVal++}
+  if(!Object.keys(val).length){bad++;continue}
+  const k=dayKey(t);byDay.set(k,Object.assign(byDay.get(k)||{d:t},val))}
+ const items=[...byDay.values()].sort((a,b)=>a.d-b.d);
+ const have=new Map(D.body.map(b=>[dayKey(b.d),b]));
+ const upd=items.filter(x=>have.has(dayKey(x.d))),noKg=items.filter(x=>!x.kg&&!have.has(dayKey(x.d)));
+ const ok=items.filter(x=>x.kg||have.has(dayKey(x.d)));
+ if(!ok.length)return sheet(`<h3>Không có lần đo hợp lệ</h3><p>Đọc được cột ${got.map(m=>m.l).join(', ')} nhưng không có dòng nào đủ ngày và số đo${noKg.length?' (lần đo mới cần có cân nặng)':''}.</p><button class="btn red block" data-act="close">Đóng</button>`);
+ S.bimp=ok;const L=ok[ok.length-1];
+ sheet(`<h3>Nhập số đo cơ thể</h3><p class="cf" style="margin-bottom:6px">Đọc được <b>${ok.length}</b> lần đo, từ ${fmtDate(ok[0].d)} đến ${fmtDate(L.d)}.</p>
+ <ul class="imp">${upd.length?`<li>${upd.length} ngày đã có số đo: sẽ cập nhật các chỉ số có trong file, giữ nguyên chỉ số khác</li>`:''}${bad?`<li>Bỏ qua ${bad} dòng không đọc được ngày hoặc số liệu</li>`:''}${badVal?`<li>Bỏ qua ${badVal} ô có số nằm ngoài khoảng hợp lý</li>`:''}${noKg.length?`<li>Bỏ qua ${noKg.length} lần đo mới không có cân nặng</li>`:''}${skipCols.length?`<li class="mute">Cột không dùng: ${esc(skipCols.slice(0,8).join(', '))}${skipCols.length>8?'…':''}</li>`:''}</ul>
+ <p class="lbl">Lần đo mới nhất trong file · ${dm(L.d)}</p><table class="cmp"><tbody>${got.map(m=>`<tr><td>${m.l}<small>cột “${esc(String(head[cols[m.k]]).trim())}”</small></td><td><b>${L[m.k]!=null?bmFmt(m,L[m.k]):'—'}</b> <span class="mute small">${m.u}</span></td></tr>`).join('')}</tbody></table>
+ <button class="btn red block" data-act="bimp-ok">Nhập ${ok.length} lần đo</button><button class="btn block" data-act="close">Huỷ</button>`,'tall')}
+let xlsxP=null;
+const loadXLSX=()=>xlsxP||(xlsxP=new Promise((ok,no)=>{if(window.XLSX)return ok(window.XLSX);const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=()=>window.XLSX?ok(window.XLSX):no();s.onerror=()=>{xlsxP=null;no()};document.head.appendChild(s)}));
+async function readBodyFile(file){
+ if(/\.xlsx?$|\.xlsm$/i.test(file.name)||/spreadsheet|excel/.test(file.type)){
+  let X;try{toast('Đang đọc file Excel…');X=await loadXLSX()}catch(e){return toast('Cần có mạng ở lần đầu đọc file Excel')}
+  try{const wb=X.read(await file.arrayBuffer(),{type:'array',cellDates:true});
+   /* chọn sheet đầu tiên có dòng tiêu đề nhận ra được */
+   let best=null;for(const n of wb.SheetNames){const rows=X.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:''});if(rows.slice(0,15).some(r=>{const c=bodyCols(r);return c.d!=null&&Object.keys(c).length>=2})){best=rows;break}if(!best)best=rows}
+   return importBody(best||[])}catch(e){return toast('Không đọc được file Excel')}}
+ const buf=await file.arrayBuffer();let txt=new TextDecoder('utf-8').decode(buf);
+ if(txt.includes('�'))try{txt=new TextDecoder('windows-1258').decode(buf)}catch(e){} // CSV lưu từ Excel tiếng Việt kiểu cũ
+ txt=txt.replace(/^﻿/,'');const l1=txt.split(/\r?\n/,1)[0],dl=[',',';','\t'].sort((a,b)=>l1.split(b).length-l1.split(a).length)[0];
+ importBody(parseCSV(txt,dl))}
+function bodyTemplate(){const head=['Ngày','Cân nặng (kg)','% mỡ','Cơ xương (kg)','Khối mỡ (kg)','Mỡ nội tạng','Nước (kg)','BMR (kcal)','Điểm InBody'];
+ saveFile('ggym-mau-so-do.csv','﻿'+head.join(',')+'\r\n','text/csv')}
+async function saveFile(name,txt,type){let file=null;try{file=new File([txt],name,{type})}catch(e){}
+ try{if(file&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});return}}catch(e){if(e&&e.name==='AbortError')return}
+ try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type}));a.download=name;document.body.appendChild(a);a.click();a.remove();toast('Đã tải '+name)}catch(e){toast('Thiết bị không cho tải file')}}
 function settingsSheet(){const st=D.settings;
  sheet(`<h3>Cài đặt${multi()?' · '+esc(curP().name):''}</h3>${multi()?'<p class="mute small" style="margin-top:-6px">Cài đặt, sao lưu và xoá dữ liệu bên dưới chỉ áp dụng cho hồ sơ này.</p>':''}<p class="lbl">Thời gian nghỉ mặc định</p><div class="chips">${[60,90,120,150,180].map(s=>`<button class="chip ${st.rest===s?'on':''}" data-act="defrest" data-s="${s}">${fmtClock(s)}</button>`).join('')}</div>
  <div class="tg" style="margin-top:12px"><span>Âm báo khi hết giờ nghỉ</span><button class="sw ${st.sound?'on':''}" data-act="tgl" data-k="sound" aria-pressed="${!!st.sound}" aria-label="Âm báo"></button></div>
@@ -907,12 +1028,23 @@ const A={
  sp:d=>{S.sp=+d.k;render()},
  sm:d=>{S.sm=d.k;render()},
  bm:d=>{S.bm=d.k;render()},
- 'body-add':()=>{const kg=num($('#bw').value),bf=num($('#bf').value),v=$('#bd').value;
-  if(!(kg>20&&kg<300))return toast('Nhập cân nặng hợp lệ');if(bf&&!(bf>2&&bf<70))return toast('% mỡ không hợp lệ');
+ 'body-add':()=>{const v=$('#bd').value,val={};
+  for(const m of BM){const el=$('#b-'+m.k);const x=el?num(el.value):0;if(!x)continue;if(!(x>=m.lo&&x<=m.hi))return toast(m.l+' không hợp lệ');val[m.k]=x}
   const p=(v||ymd(new Date())).split('-').map(Number),t=new Date(p[0],p[1]-1,p[2],12).getTime();
-  const ex=D.body.find(b=>dayKey(b.d)===dayKey(t));if(ex){ex.kg=kg;ex.bf=bf||ex.bf||0;ex.u=Date.now();toast('Đã cập nhật số đo ngày '+dm(t))}else{D.body.push({id:uid(),u:Date.now(),d:t,kg,bf:bf||0});toast('Đã ghi số đo')}
+  const ex=D.body.find(b=>dayKey(b.d)===dayKey(t));
+  if(!val.kg&&!ex)return toast('Nhập cân nặng hợp lệ');
+  if(ex){Object.assign(ex,val);ex.u=Date.now();toast('Đã cập nhật số đo ngày '+dm(t))}else{D.body.push(Object.assign({id:uid(),u:Date.now(),d:t,bf:0},val));toast('Đã ghi số đo')}
   save();render()},
- 'body-open':d=>{const b=D.body.find(x=>x.id===d.id);if(!b)return;sheet(`<h3>${fmtDate(b.d)}</h3><p class="cf">${fx(b.kg)} kg${b.bf?' · '+fx(b.bf)+' % mỡ':''}</p><button class="btn block danger" data-act="body-del" data-id="${b.id}">Xoá lần đo này</button><button class="btn block" data-act="close">Đóng</button>`)},
+ 'body-open':d=>{const b=D.body.find(x=>x.id===d.id);if(!b)return;
+  sheet(`<h3>${fmtDate(b.d)}</h3><table class="cmp" style="margin-bottom:8px"><tbody>${BM.filter(m=>b[m.k]).map(m=>`<tr><td>${m.l}<small>${m.en}</small></td><td><b>${bmFmt(m,b[m.k])}</b> <span class="mute small">${m.u}</span></td></tr>`).join('')}</tbody></table>
+  <button class="btn block" data-act="body-edit" data-id="${b.id}">Sửa lần đo này</button><button class="btn block danger" style="background:none" data-act="body-del" data-id="${b.id}">Xoá lần đo này</button>`)},
+ 'body-edit':d=>{const b=D.body.find(x=>x.id===d.id);if(!b)return;closeSheet();S.bmore=isIB(b);render();
+  for(const m of BM){const el=$('#b-'+m.k);if(el)el.value=b[m.k]?fx(b[m.k]):''}$('#bd').value=ymd(new Date(b.d));scrollTo(0,0);toast('Sửa số rồi bấm Ghi số đo')},
+ 'bimp-tpl':()=>bodyTemplate(),
+ 'bimp-ok':()=>{const it=S.bimp||[];S.bimp=null;let n=0,u=0;const have=new Map(D.body.map(b=>[dayKey(b.d),b]));
+  for(const x of it){const b=have.get(dayKey(x.d)),v=Object.assign({},x);delete v.d;
+   if(b){Object.assign(b,v);b.u=Date.now();u++}else{const nb=Object.assign({id:uid(),u:Date.now(),d:x.d,bf:0},v);D.body.push(nb);have.set(dayKey(x.d),nb);n++}}
+  save();closeSheet();S.tab='body';render();toast(`Đã nhập ${n} lần đo mới${u?`, cập nhật ${u} lần`:''}`)},
  'body-del':d=>{tomb(d.id);D.body=D.body.filter(b=>b.id!==d.id);save();closeSheet();render();toast('Đã xoá')},
  'r-new':()=>{S.draft={id:null,name:'',days:[],items:[]};S.view='routine';render();scrollTo(0,0)},
  'r-edit':d=>{const r=D.routines.find(x=>x.id===d.id);if(!r)return;S.draft=JSON.parse(JSON.stringify(r));S.draft.days=S.draft.days||[];S.view='routine';render();scrollTo(0,0)},
@@ -941,8 +1073,10 @@ document.addEventListener('input',e=>{const t=e.target,f=t.dataset.f;if(!f)retur
  else if(f==='exq'){S.q=t.value;$('#exlist').innerHTML=exListHtml()}
  else if(f==='rname'&&S.draft){S.draft.name=t.value}
  else if(f==='refq'){S.rq=t.value;$('#reflist').innerHTML=refList()}});
-document.addEventListener('change',async e=>{const t=e.target,f=t.dataset.f;if(f!=='imp-json'&&f!=='imp-hevy')return;const file=t.files&&t.files[0];if(!file)return;
+document.addEventListener('change',async e=>{const t=e.target,f=t.dataset.f;if(f!=='imp-json'&&f!=='imp-hevy'&&f!=='imp-body')return;const file=t.files&&t.files[0];if(!file)return;
+ if(f==='imp-body'){t.value='';try{await readBodyFile(file)}catch(err){toast('Không đọc được file')}return}
  let txt='';try{txt=await file.text()}catch(err){return toast('Không đọc được file')}t.value='';if(f==='imp-json')importJSON(txt);else importHevy(txt)});
+document.addEventListener('toggle',e=>{if(e.target.matches&&e.target.matches('details.more'))S.bmore=e.target.open},true);
 document.addEventListener('focusin',e=>{if(e.target.matches('.row input')){const t=e.target;setTimeout(()=>{try{t.select()}catch(x){}},0)}});
 
 /* ---------- timers, sound, wake lock ---------- */

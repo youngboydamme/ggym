@@ -89,6 +89,12 @@ select
   b ->> 'id' as entry_id,
   (to_timestamp((b ->> 'd')::double precision / 1000) at time zone 'Asia/Ho_Chi_Minh')::date as measured_on,
   (b ->> 'kg')::numeric as weight_kg,
-  nullif((b ->> 'bf')::numeric, 0) as body_fat_pct
+  nullif((b ->> 'bf')::numeric, 0) as body_fat_pct,
+  nullif((b ->> 'smm')::numeric, 0) as skeletal_muscle_kg,
+  nullif((b ->> 'fm')::numeric, 0) as body_fat_mass_kg,
+  nullif((b ->> 'vf')::numeric, 0) as visceral_fat_level,
+  nullif((b ->> 'tbw')::numeric, 0) as total_body_water_kg,
+  nullif((b ->> 'bmr')::numeric, 0) as bmr_kcal,
+  nullif((b ->> 'sc')::numeric, 0) as inbody_score
 from public.ggym_docs d
 cross join lateral jsonb_array_elements(coalesce(d.doc -> 'body', '[]'::jsonb)) as b;
