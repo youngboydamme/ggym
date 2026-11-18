@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="GGym">
+<meta name="theme-color" content="#f2f0eb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101215" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<title>GGym</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: gọn, chắc tay, như cuốn sổ ghi tạ ở phòng gym
+   IDEA: đĩa tạ bumper — tuần tập là một hàng đĩa, kỷ lục là đĩa vàng
+   PICTURE: hàng 7 đĩa của tuần ở trang chủ; bảng set lớn khi đang tập
+   COLOUR and TYPE: than chì / phấn trắng, đỏ đĩa 25kg làm điểm nhấn, xanh lá cho set xong; Barlow Condensed cho số, Be Vietnam Pro cho chữ
+   LAYOUT: một cột tối đa 640px, thanh tab dưới, sheet trượt từ dưới lên */
+:root{--fc:'Barlow Condensed',system-ui,-apple-system,'Helvetica Neue',sans-serif;--bg:#f2f0eb;--card:#fff;--card2:#ebe8e1;--line:#ddd8ce;--ink:#17191e;--mute:#62666e;--red:#d23a40;--red2:#a92c31;--yel:#c98f00;--grn:#1f8f5b;--grnbg:#dcf1e5;--sh:0 1px 2px rgba(20,20,20,.06);color-scheme:light;--sb:env(safe-area-inset-bottom,0px);--st:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#101215;--card:#1a1d22;--card2:#262a32;--line:#2e333c;--ink:#edebe6;--mute:#9a9fa9;--red:#e5484d;--red2:#a83035;--yel:#f0b72f;--grn:#34b477;--grnbg:#15301f;--sh:none;color-scheme:dark}}
+:root[data-theme=dark]{--bg:#101215;--card:#1a1d22;--card2:#262a32;--line:#2e333c;--ink:#edebe6;--mute:#9a9fa9;--red:#e5484d;--red2:#a83035;--yel:#f0b72f;--grn:#34b477;--grnbg:#15301f;--sh:none;color-scheme:dark}
+:root[data-theme=light]{color-scheme:light}
+*{box-sizing:border-box;min-width:0;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 'Be Vietnam Pro',system-ui,-apple-system,sans-serif;overflow-x:clip}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;padding:0}
+button:disabled{opacity:.3;cursor:default}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.bc{font-family:var(--fc);font-variant-numeric:tabular-nums}
+#view{max-width:640px;margin:0 auto;padding:0 16px calc(150px + var(--sb))}
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:6px;padding:calc(var(--st) + 10px) 0 10px;background:var(--bg)}
+.top h1{flex:1;margin:0;font:700 34px/1.05 var(--fc);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top h1.sm{font-size:24px;line-height:1.1;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.icon{width:44px;height:44px;flex:none;display:grid;place-items:center;border-radius:12px;color:var(--ink);font-size:20px;font-weight:600}
+.icon svg{width:24px;height:24px}
+.icon:active,.chip:active,.btn:active{filter:brightness(.92)}
+.btn{min-height:48px;padding:0 18px;border-radius:12px;background:var(--card2);font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-align:center}
+a.btn{color:var(--ink);text-decoration:none}
+.btn.red{background:var(--red);color:#fff}
+.btn.ghost{background:transparent;border:1.5px dashed var(--line);color:var(--mute)}
+.btn.danger,.danger{color:var(--red)}
+.btn.block{display:flex;width:100%;margin-top:10px}
+.btn.sm{min-height:40px;padding:0 16px}
+.link{min-height:44px;padding:0 8px;color:var(--mute);font-weight:500}
+.link.strong{color:var(--red);font-weight:700}
+.card{background:var(--card);border-radius:16px;padding:14px;box-shadow:var(--sh);margin-top:12px}
+h2{font:700 24px/1.1 var(--fc),sans-serif;margin:28px 0 2px}
+.lbl{font-size:13px;color:var(--mute);margin:18px 0 8px;font-weight:600}
+.mute{color:var(--mute)}.small{font-size:13px}
+.empty{color:var(--mute);text-align:center;padding:28px 12px;margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips.scroll{flex-wrap:nowrap;overflow-x:auto;margin:12px -16px 0;padding:0 16px 4px;scrollbar-width:none}
+.chips.scroll::-webkit-scrollbar{display:none}
+.chip{flex:none;min-height:40px;padding:0 15px;border-radius:999px;background:var(--card2);font-size:15px;font-weight:500;white-space:nowrap}
+.chip.on{background:var(--ink);color:var(--bg)}
+.search,.field{width:100%;height:48px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);padding:0 14px;font-size:16px}
+.field.big{font-size:22px;font-weight:600;height:56px;margin-top:6px}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
+/* home */
+.week{margin-top:12px;background:var(--card);border-radius:20px;padding:18px 12px 14px;box-shadow:var(--sh)}
+.plates{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}
+.pl i{display:block;width:min(42px,10.5vw);aspect-ratio:1;margin:0 auto 6px;border-radius:50%;border:2px dashed var(--line)}
+.pl.on i{border:0;background:radial-gradient(circle,var(--card) 0 15%,var(--ink) 16% 23%,var(--red) 24% 63%,var(--red2) 64% 71%,var(--red) 72%);box-shadow:0 2px 0 var(--red2)}
+.pl span{font-size:13px;color:var(--mute)}
+.pl.today span{color:var(--ink);font-weight:700}
+.pl.today:not(.on) i{border:2px solid var(--ink)}
+.wsum{display:flex;gap:26px;margin:14px 6px 0;font-size:13px;color:var(--mute)}
+.wsum b{font:700 30px/1 var(--fc);color:var(--ink);display:block;font-variant-numeric:tabular-nums}
+.hero{background:var(--ink);color:var(--bg);border-radius:20px;padding:18px;margin-top:12px}
+.hero small{opacity:.7;font-size:13px}
+.hero h3{font:700 44px/1 var(--fc);margin:4px 0 8px}
+.hero p{margin:0 0 6px;opacity:.82;font-size:14px}
+.hero .btn.red{margin-top:12px}
+.hero .btn.alt{background:rgba(127,127,127,.28);color:inherit}
+.rc-h{display:flex;align-items:center;gap:8px}
+.rc-h b{flex:1;font-size:18px}
+.days{font-size:13px;color:var(--mute);white-space:nowrap}
+.rc p{margin:0 0 2px;font-size:14px;color:var(--mute)}
+.hint{background:var(--card);border:1.5px dashed var(--line);border-radius:14px;padding:12px 6px 12px 14px;margin-top:12px;font-size:14px;display:flex;gap:6px;align-items:flex-start}
+.hint p{margin:0;flex:1}
+/* workout */
+.top.wk{justify-content:space-between}
+.wk-t{text-align:center;line-height:1.1}
+.wk-t b{font:700 30px/1 var(--fc);font-variant-numeric:tabular-nums;display:block}
+.wk-t small{font-size:13px;color:var(--mute)}
+.wk-name{width:100%;border:0;background:none;font:700 32px/1.1 var(--fc),sans-serif;padding:4px 0;outline:none}
+.wk-stats{display:flex;gap:18px;color:var(--mute);font-size:14px}
+.wk-stats b{color:var(--ink);font:700 22px var(--fc);font-variant-numeric:tabular-nums}
+.ex-h{display:flex;align-items:center;gap:6px}
+.ex-name{flex:1;text-align:left;font-weight:700;font-size:17px;color:var(--red);min-height:40px;line-height:1.25}
+.ex-sub{font-size:13px;color:var(--mute);margin:-2px 0 8px}
+.row{display:grid;grid-template-columns:34px minmax(0,1fr) 72px 60px 44px;gap:6px;align-items:center;padding:4px;border-radius:10px;margin:0 -4px}
+.row.hd{font-size:13px;color:var(--mute);font-weight:600;padding-block:0}
+.row.hd span{text-align:center}.row.hd span:nth-child(2){text-align:left}
+.row input{width:100%;height:44px;border:0;border-radius:9px;background:var(--card2);text-align:center;font:600 20px var(--fc),sans-serif;font-variant-numeric:tabular-nums;padding:0 4px}
+.row input::placeholder{color:var(--mute);opacity:.55}
+.setno{height:40px;border-radius:9px;font:700 19px var(--fc);color:var(--ink)}
+.setno.wu,.wu{color:var(--yel)}
+.prev{font-size:14px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.chk{width:44px;height:44px;border-radius:10px;background:var(--card2);display:grid;place-items:center;color:var(--mute)}
+.chk svg{width:22px;height:22px}
+.row.done{background:var(--grnbg)}
+.row.done input{background:transparent}
+.row.done .chk{background:var(--grn);color:#fff}
+/* bars */
+#rest{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + var(--sb));width:min(608px,calc(100% - 24px));z-index:20;background:var(--ink);color:var(--bg);border-radius:16px;padding:10px 10px 10px 16px;display:flex;align-items:center;gap:6px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+#rest .rp{position:absolute;left:0;top:0;height:4px;width:100%}
+#rest .rp i{display:block;height:100%;background:var(--red);transition:width .5s linear}
+#rest .rl{font-size:13px;opacity:.7}
+#rest b{font:700 32px/1 var(--fc);flex:1;font-variant-numeric:tabular-nums}
+#rest button{min-height:44px;min-width:50px;padding:0 10px;border-radius:10px;background:rgba(127,127,127,.3);color:inherit;font-weight:600}
+#rest[hidden],#mini[hidden],body:not(.in-wk) #rest{display:none}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--card);border-top:1px solid var(--line);padding-bottom:var(--sb)}
+.tabs div{max-width:640px;margin:0 auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.tabs button{min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:13px;color:var(--mute)}
+.tabs svg{width:24px;height:24px}
+.tabs button.on{color:var(--red);font-weight:600}
+body.in-wk .tabs,body.in-wk #mini{display:none}
+#mini{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(68px + var(--sb));width:min(608px,calc(100% - 24px));z-index:14;background:var(--red);color:#fff;border-radius:14px;min-height:54px;display:flex;align-items:center;gap:10px;padding:0 16px;font-weight:600;box-shadow:0 6px 18px rgba(0,0,0,.22)}
+#mini span{flex:1;text-align:left;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+#mini b{font:700 24px var(--fc);font-variant-numeric:tabular-nums}
+/* sheet */
+#sheet{position:fixed;inset:0;z-index:30;display:none}
+#sheet.open{display:block}
+#sheet .bd{position:absolute;inset:0;background:rgba(0,0,0,.45)}
+#sheet .panel{position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:640px;max-height:88vh;overflow:auto;background:var(--bg);border-radius:20px 20px 0 0;padding:10px 18px calc(24px + var(--sb));animation:up .22s ease-out;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+#sheet .panel.tall{height:88vh}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 10px}
+#sheet h3{font:700 28px/1.1 var(--fc);margin:6px 0 10px}
+@keyframes up{from{transform:translateY(40px);opacity:.3}}
+.list{display:flex;flex-direction:column;margin-top:14px;border-radius:14px;overflow:hidden;background:var(--card)}
+.list>button{min-height:54px;text-align:left;padding:0 16px;border-bottom:1px solid var(--line);font-weight:500}
+.list>button:last-child{border:0}
+.plist .pg{font-size:13px;color:var(--mute);font-weight:600;margin:16px 0 2px}
+.plist button{display:flex;width:100%;min-height:50px;align-items:center;justify-content:space-between;gap:10px;text-align:left;border-bottom:1px solid var(--line);padding:0 2px}
+.plist small{color:var(--mute);font-size:13px;white-space:nowrap}
+.cf{font-size:17px;margin:8px 0 16px}
+#toast{position:fixed;left:50%;top:calc(var(--st) + 12px);transform:translate(-50%,-160%);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:12px;font-size:15px;font-weight:500;z-index:60;transition:transform .25s;max-width:90vw;text-align:center}
+#toast.show{transform:translate(-50%,0)}
+/* history */
+.heat{display:grid;grid-template-rows:repeat(7,auto);grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:3px}
+.heat i{aspect-ratio:1;border-radius:3px;background:var(--card2)}
+.heat i.on{background:var(--red)}
+.heat i.fu{opacity:.25}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.tiles.t3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.tiles>div{background:var(--card);border-radius:14px;padding:12px;box-shadow:var(--sh)}
+.tiles b{display:block;font:700 clamp(24px,7vw,30px)/1.05 var(--fc);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tiles span{font-size:13px;color:var(--mute)}
+.card .tiles>div{background:var(--card2);box-shadow:none}
+.mon{font:700 19px var(--fc);color:var(--mute);margin:24px 0 -4px}
+.wc{cursor:pointer;display:block}
+.wc-h{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.wc-h b{font-size:17px}
+.wc-h span{font-size:13px;color:var(--mute);white-space:nowrap}
+.wc-m{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:14px;color:var(--mute);margin:2px 0 8px}
+.pr{color:var(--yel);font-weight:700}
+.wc ul{list-style:none;margin:0;padding:0;font-size:14px}
+.wc li{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-top:1px solid var(--line)}
+.wc li span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wc li small{color:var(--mute);white-space:nowrap;font-size:13px}
+/* exercises */
+.li{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:60px;border-bottom:1px solid var(--line);cursor:pointer}
+.li small{display:block;color:var(--mute);font-size:13px}
+.li .pv{font:700 21px var(--fc);white-space:nowrap;font-variant-numeric:tabular-nums}
+.seg{display:flex;background:var(--card2);border-radius:12px;padding:3px;margin:18px 0 8px}
+.seg button{flex:1;min-height:40px;border-radius:9px;font-size:14px;font-weight:600;color:var(--mute)}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.fig{position:relative;height:230px;background:var(--card);border-radius:16px;touch-action:pan-y;box-shadow:var(--sh)}
+.fig svg{position:absolute;inset:0;display:block}
+.rec{width:100%;border-collapse:collapse;font-size:15px;background:var(--card);border-radius:14px;overflow:hidden}
+.rec td{padding:10px 14px;border-bottom:1px solid var(--line)}
+.rec tr:last-child td{border:0}
+.rec td:last-child{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.sess{padding:10px 0;border-bottom:1px solid var(--line)}
+.sess b{font-size:14px}
+.sess p{margin:2px 0 0;font-size:15px;font-variant-numeric:tabular-nums}
+/* body */
+.bform{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.bform label{font-size:13px;color:var(--mute);font-weight:600;display:flex;flex-direction:column;gap:4px}
+.bform label.full,.bform .btn{grid-column:1/-1}
+.bform input{height:48px;border-radius:12px;border:1.5px solid var(--line);background:var(--card2);padding:0 12px;font-size:18px;color:var(--ink);width:100%}
+.brow{display:flex;align-items:center;gap:12px;min-height:54px;border-bottom:1px solid var(--line);cursor:pointer}
+.brow span{flex:1}
+.brow b{font:700 22px var(--fc);font-variant-numeric:tabular-nums}
+.brow small{color:var(--mute);font-size:14px;min-width:64px;text-align:right}
+/* routine editor */
+.ri{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 10px;align-items:center}
+.ri-n small{display:block;color:var(--mute);font-size:13px}
+.ri-a{grid-column:1/-1;display:flex;gap:4px;justify-content:flex-end;margin:-6px -6px -6px 0}
+.step{display:flex;align-items:center;gap:4px}
+.step button{width:40px;height:40px;border-radius:10px;background:var(--card2);font-size:20px;font-weight:600}
+.step span{min-width:54px;text-align:center;font-weight:600;font-size:15px}
+/* settings */
+.tg{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;border-bottom:1px solid var(--line)}
+.sw{width:52px;height:32px;flex:none;border-radius:16px;background:var(--card2);position:relative;border:1px solid var(--line)}
+.sw::after{content:'';position:absolute;top:2px;left:2px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s}
+.sw.on{background:var(--grn);border-color:var(--grn)}
+.sw.on::after{left:22px}
+label.btn{cursor:pointer;position:relative}
+/* summary + detail */
+.prs{list-style:none;padding:0;margin:0}
+.prs li{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:0 10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.avbtn{flex:none;width:44px;height:44px;display:grid;place-items:center;border-radius:50%}
+.av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font:700 19px/1 var(--fc);color:var(--t);background:radial-gradient(circle,transparent 0 58%,rgba(0,0,0,.18) 59% 66%,transparent 67%),var(--c);box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.12)}
+.av.big{width:48px;height:48px;font-size:24px}
+.plist2{display:flex;flex-direction:column;gap:8px}
+.prow{display:flex;align-items:center;gap:4px;background:var(--card);border-radius:14px;padding:4px 4px 4px 0;box-shadow:var(--sh)}
+.prow.on{box-shadow:inset 0 0 0 2px var(--red)}
+.pbtn{flex:1;display:flex;align-items:center;gap:12px;min-height:64px;padding:0 12px;text-align:left;min-width:0}
+.pbtn>span:nth-child(2){flex:1;min-width:0}
+.pbtn b{display:block;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pbtn small{display:block;color:var(--mute);font-size:13px}
+.pbtn i{font-style:normal;font-size:13px;font-weight:600;color:var(--red);white-space:nowrap}
+.colchip{display:inline-flex;align-items:center;gap:8px}
+.dot{width:16px;height:16px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
+.row2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.medal{grid-row:span 2;width:26px;height:26px;border-radius:50%;background:radial-gradient(circle,var(--bg) 0 18%,var(--yel) 20% 66%,#9c6f00 68% 74%,var(--yel) 76%)}
+.prs small{grid-column:2;color:var(--mute);font-size:13px}
+.prs b{grid-row:1/3;grid-column:3;font:700 21px var(--fc);white-space:nowrap}
+.dx{padding:10px 0;border-bottom:1px solid var(--line)}
+.dx ol{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:2px}
+.dx li{display:flex;gap:10px;font-variant-numeric:tabular-nums}
+.sn{width:22px;color:var(--mute);font-weight:600}
+.row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:18px}
+.th{width:52px;height:38px;flex:none;border-radius:8px;object-fit:cover;background:#fff;display:block}
+.th.none{display:grid;place-items:center;background:var(--card2);color:var(--mute);font-weight:700;font-size:15px}
+.exth{flex:none;border-radius:8px;line-height:0}
+.lim,.pi{display:flex;align-items:center;gap:12px;min-width:0}
+.pi>span{overflow:hidden;text-overflow:ellipsis}
+.demo{position:relative;aspect-ratio:3/2;background:#fff;border-radius:16px;overflow:hidden;box-shadow:var(--sh)}
+.demo img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.demo img+img{animation:flip 2.4s steps(1,end) infinite}
+@keyframes flip{0%{opacity:0}50%{opacity:1}}
+.demo.nodemo{background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--mute);text-align:center;padding:16px;aspect-ratio:3/1.4}
+.demo.nodemo p{margin:0}
+.cues{margin:14px 0 0;padding:0;list-style:none;counter-reset:c;display:grid;gap:8px}
+.cues li{counter-increment:c;display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;font-size:15px;line-height:1.45}
+.cues li::before{content:counter(c);width:26px;height:26px;border-radius:50%;background:var(--red);color:#fff;font:700 15px/26px var(--fc);text-align:center}
+@media (prefers-reduced-motion:reduce){.demo{aspect-ratio:3/1}.demo img{position:static;width:50%;height:100%;float:left}.demo img+img{animation:none}#sheet .panel{animation:none}#rest .rp i,#toast,.sw::after{transition:none}}
+@media (max-width:360px){.row{grid-template-columns:30px minmax(0,1fr) 64px 54px 42px;gap:4px}.prev{font-size:13px}}
+</style>
+</head>
+<body>
+<main id="view"></main>
+<button id="mini" data-act="resume" hidden></button>
+<div id="rest" hidden>
+  <div class="rp"><i id="rest-p"></i></div>
+  <span class="rl">Nghỉ</span><b id="rest-t">0:00</b>
+  <button data-act="rest-adj" data-s="-15">−15</button>
+  <button data-act="rest-adj" data-s="15">+15</button>
+  <button data-act="rest-skip">Bỏ qua</button>
+</div>
+<nav class="tabs" aria-label="Điều hướng"><div>
+  <button data-act="tab" data-t="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6.5 7v10M3.5 9.5v5M17.5 7v10M20.5 9.5v5M6.5 12h11"/></svg>Tập</button>
+  <button data-act="tab" data-t="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Lịch sử</button>
+  <button data-act="tab" data-t="ex"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></svg>Bài tập</button>
+  <button data-act="tab" data-t="body"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8.5 10a5 5 0 0 1 7 0M12 13l1.6-2.6"/></svg>Cơ thể</button>
+</div></nav>
+<div id="sheet"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+{
+/* ---------- helpers ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const num=v=>{const n=parseFloat(String(v==null?'':v).replace(',','.'));return isFinite(n)?n:0};
+const r1=n=>Math.round(n*10)/10;
+const fx=n=>String(Math.round(n*100)/100).replace('.',',');
+const fmtNum=(n,d=1)=>Math.abs(n)>=1000?Math.round(n).toLocaleString('vi-VN'):fx(Math.round(n*10**d)/10**d);
+const fmtVol=n=>Math.round(n).toLocaleString('vi-VN');
+const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'d').toLowerCase().trim();
+const DAY=['CN','T2','T3','T4','T5','T6','T7'];
+const DAYF=['Chủ nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
+const pad=n=>String(n).padStart(2,'0');
+const dm=ts=>{const d=new Date(ts);return d.getDate()+'/'+(d.getMonth()+1)};
+const hm=ts=>{const d=new Date(ts);return pad(d.getHours())+':'+pad(d.getMinutes())};
+const fmtDate=ts=>{const d=new Date(ts);return DAY[d.getDay()]+', '+dm(ts)+(d.getFullYear()!==new Date().getFullYear()?'/'+d.getFullYear():'')};
+const fmtClock=s=>{s=Math.max(0,Math.floor(s));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return h?h+':'+pad(m)+':'+pad(x):m+':'+pad(x)};
+const fmtMin=ms=>{const m=Math.max(1,Math.round(ms/60000));return m>=60?Math.floor(m/60)+' giờ '+(m%60?m%60+' phút':''):m+' phút'};
+const durS=ms=>{if(ms<30000)return '0';const m=Math.round(ms/60000);return m>=60?Math.floor(m/60)+'g'+(m%60?pad(m%60):''):m+'p'};
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const dayKey=ts=>{const d=new Date(ts);return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate()};
+const startOfWeek=now=>{const d=new Date(now);d.setHours(0,0,0,0);d.setDate(d.getDate()-(d.getDay()+6)%7);return d};
+const epley=(w,r)=>r<=0?0:r===1?w:w*(1+r/30);
+const ICON={
+ check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+ dots:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>',
+ down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+ back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+ cog:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg>',
+ x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+};
+
+/* ---------- seed data ---------- */
+const GROUPS=['Ngực','Lưng','Vai','Tay trước','Tay sau','Chân','Mông','Bụng','Khác'];
+const EX0=[
+['bench','Bench Press (Barbell)','Ngực'],['incl-db','Incline Bench Press (Dumbbell)','Ngực'],['db-bench','Bench Press (Dumbbell)','Ngực'],
+['incl-bb','Incline Bench Press (Barbell)','Ngực'],['chest-press','Chest Press (Machine)','Ngực'],['cable-fly','Cable Fly Crossovers','Ngực'],
+['pec-deck','Butterfly (Pec Deck)','Ngực'],['dip','Chest Dip','Ngực'],['pushup','Push Up','Ngực'],
+['ohp','Overhead Press (Barbell)','Vai'],['db-sp','Shoulder Press (Dumbbell)','Vai'],['lat-raise','Lateral Raise (Dumbbell)','Vai'],
+['cable-lat','Lateral Raise (Cable)','Vai'],['face-pull','Face Pull','Vai'],['rear-fly','Rear Delt Reverse Fly (Dumbbell)','Vai'],
+['pushdown','Triceps Pushdown','Tay sau'],['oh-ext','Overhead Triceps Extension (Cable)','Tay sau'],['skull','Skullcrusher (Barbell)','Tay sau'],
+['db-curl','Bicep Curl (Dumbbell)','Tay trước'],['bb-curl','Bicep Curl (Barbell)','Tay trước'],['hammer','Hammer Curl (Dumbbell)','Tay trước'],
+['preacher','Preacher Curl (Machine)','Tay trước'],['cable-curl','Bicep Curl (Cable)','Tay trước'],
+['deadlift','Deadlift (Barbell)','Lưng'],['pullup','Pull Up','Lưng'],['chinup','Chin Up','Lưng'],['pulldown','Lat Pulldown (Cable)','Lưng'],
+['bb-row','Bent Over Row (Barbell)','Lưng'],['cable-row','Seated Cable Row - V Grip (Cable)','Lưng'],['db-row','Dumbbell Row','Lưng'],
+['tbar','T Bar Row','Lưng'],['shrug','Shrug (Dumbbell)','Lưng'],
+['squat','Squat (Barbell)','Chân'],['legpress','Leg Press (Machine)','Chân'],['hack','Hack Squat (Machine)','Chân'],
+['rdl','Romanian Deadlift (Barbell)','Chân'],['leg-curl','Lying Leg Curl (Machine)','Chân'],['seat-curl','Seated Leg Curl (Machine)','Chân'],
+['leg-ext','Leg Extension (Machine)','Chân'],['bss','Bulgarian Split Squat','Chân'],['lunge','Lunge (Dumbbell)','Chân'],
+['goblet','Goblet Squat','Chân'],['calf','Standing Calf Raise (Machine)','Chân'],
+['hip-thrust','Hip Thrust (Barbell)','Mông'],['abduct','Hip Abduction (Machine)','Mông'],
+['hlr','Hanging Leg Raise','Bụng'],['cable-crunch','Cable Crunch','Bụng'],['crunch','Crunch','Bụng']
+];
+const R0=[
+ ['Push',[1],[['bench',4],['incl-db',3],['ohp',3],['lat-raise',3],['pushdown',3],['oh-ext',2]]],
+ ['Legs',[3],[['squat',4],['rdl',3],['legpress',3],['leg-curl',3],['leg-ext',3],['calf',4]]],
+ ['Upper nhẹ',[4],[['incl-db',3],['pulldown',3],['db-sp',3],['cable-row',3],['db-curl',2],['pushdown',2]]],
+ ['Pull',[5],[['deadlift',3],['pullup',3],['bb-row',3],['pulldown',3],['face-pull',3],['db-curl',3],['hammer',2]]]
+];
+const seed=()=>({v:1,exercises:EX0.map(([id,name,group])=>({id,name,group})),
+ routines:R0.map(([name,days,items])=>({id:uid(),name,days,items:items.map(([exId,sets])=>({exId,sets}))})),
+ workouts:[],body:[],active:null,restBy:{},settings:{rest:90,sound:true,wake:true,hintOff:false}});
+
+/* ---------- storage ---------- */
+/* storage: giữ nguyên khoá 'sota.*' từ trước khi đổi tên app để không mất dữ liệu.
+   profiles: hồ sơ đầu tiên dùng đúng khoá cũ 'sota.v1' nên dữ liệu sẵn có không phải di chuyển */
+const PKEY='sota.profiles',keyOf=id=>id==='main'?'sota.v1':'sota.v1.'+id;
+const PC=['#d23a40','#2c66d6','#e3a600','#1f8f5b','#e8e6e1','#3a3f48'],PCN=['Đỏ','Xanh dương','Vàng','Xanh lá','Trắng','Xám'];
+let P=null,D=null,canStore=true;
+try{P=JSON.parse(localStorage.getItem(PKEY)||'null')}catch(e){}
+if(!P||!Array.isArray(P.list)||!P.list.length)P={list:[{id:'main',name:'Tôi',color:0}],cur:'main'};
+if(!P.list.some(x=>x.id===P.cur))P.cur=P.list[0].id;
+let KEY=keyOf(P.cur);
+const curP=()=>P.list.find(x=>x.id===P.cur)||P.list[0];
+const multi=()=>P.list.length>1;
+function saveP(){try{localStorage.setItem(PKEY,JSON.stringify(P))}catch(e){}}
+try{D=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){canStore=false}
+const fix=x=>{x.del=x.del||{};x.exercises=x.exercises||[];x.routines=x.routines||[];x.workouts=x.workouts||[];x.body=x.body||[];x.restBy=x.restBy||{};
+ x.settings=Object.assign({rest:90,sound:true,wake:true,hintOff:false},x.settings||{});x.workouts.sort((a,b)=>b.start-a.start);return x};
+D=(D&&Array.isArray(D.workouts))?fix(D):seed();
+let editSeq=0;
+function saveRaw(){try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){if(canStore){canStore=false;toast('Không lưu được vào máy — hãy xuất bản sao lưu')}}}
+function save(){D.mt=Date.now();D.sync=D.sync||{};D.sync.dirty=true;editSeq++;saveRaw();scheduleSync()}
+const tomb=id=>{(D.del||(D.del={}))[id]=Date.now()};
+let EXM=null;
+function loadD(id){let x=null;try{x=JSON.parse(localStorage.getItem(keyOf(id))||'null')}catch(e){}return(x&&Array.isArray(x.workouts))?fix(x):null}
+const initial=n=>{const w=String(n||'?').trim().split(/\s+/);return(w[w.length-1][0]||'?').toUpperCase()};
+const avatar=(p,big)=>`<span class="av${big?' big':''}" style="--c:${PC[p.color]||PC[0]};--t:${p.color===2||p.color===4?'#17191e':'#fff'}">${esc(initial(p.name))}</span>`;
+const exOf=id=>{if(!EXM)EXM=new Map(D.exercises.map(e=>[e.id,e]));return EXM.get(id)||{id,name:'(Bài tập đã xoá)',group:'Khác'}};
+
+/* ---------- stats ---------- */
+function exHistory(exId,excludeId,before){const out=[];for(const w of D.workouts){if(w.id===excludeId||(before&&w.start>=before))continue;
+ let sets=null;for(const e of w.exercises)if(e.exId===exId)sets=(sets||[]).concat(e.sets);if(sets)out.push({w,sets})}return out}
+function best(sets){let mw=0,e1=0,sv=0,tv=0,mr=0,bs=null;for(const s of sets){if(s.t==='w')continue;const w=+s.w||0,r=+s.r||0;if(!r)continue;
+ mw=Math.max(mw,w);const e=epley(w,r);if(!bs||e>e1){bs=s;e1=e}sv=Math.max(sv,w*r);tv+=w*r;mr=Math.max(mr,r)}
+ return{mw,e1,sv,tv,mr,bs}}
+const wVol=w=>w.exercises.reduce((a,e)=>a+best(e.sets).tv,0);
+const wSets=w=>w.exercises.reduce((a,e)=>a+e.sets.filter(s=>s.t!=='w').length,0);
+function computePRs(w){const prs=[];for(const e of w.exercises){const prev=exHistory(e.exId,w.id,w.start);if(!prev.length)continue;
+ const p=best(prev.flatMap(h=>h.sets)),n=best(e.sets);
+ if(n.mw>p.mw)prs.push({exId:e.exId,k:'Tạ nặng nhất',v:fx(n.mw)+' kg'});
+ if(n.e1>p.e1+0.05&&n.mw>0)prs.push({exId:e.exId,k:'1RM ước tính',v:fx(r1(n.e1))+' kg'});
+ if(n.sv>p.sv)prs.push({exId:e.exId,k:'Set volume tốt nhất',v:fmtNum(n.sv)+' kg'});
+ if(n.mw===0&&p.mw===0&&n.mr>p.mr)prs.push({exId:e.exId,k:'Nhiều reps nhất',v:n.mr+' reps'});}
+ return prs}
+
+/* ---------- ui state ---------- */
+let S={tab:'home',view:null,exId:null,q:'',grp:'',pq:'',met:null,bm:'kg',draft:null,pick:null,cf:null,nxg:'Khác'};
+let embed=false;try{embed=window.top!==window.self}catch(e){embed=true}
+const standalone=navigator.standalone===true||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
+
+const avBtn=()=>`<button class="avbtn" data-act="profiles" aria-label="Đổi người tập (${esc(curP().name)})">${avatar(curP())}</button>`;
+const hdr=(title,left='',right='',sm)=>`<header class="top">${left}<h1 class="${sm?'sm':''}">${esc(title)}</h1>${right}</header>`;
+
+function render(){
+ const inWk=S.view==='workout'&&D.active;if(S.view==='workout'&&!D.active)S.view=null;
+ document.body.classList.toggle('in-wk',!!inWk);
+ let h;
+ if(inWk)h=vWorkout();else if(S.view==='routine')h=vRoutine();
+ else if(S.tab==='history')h=vHistory();else if(S.tab==='ex')h=S.exId?vExDetail():vExList();else if(S.tab==='body')h=vBody();else h=vHome();
+ $('#view').innerHTML=h;
+ $$('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===S.tab&&S.view!=='routine'));
+ const mini=$('#mini');
+ if(D.active&&!inWk){mini.hidden=false;mini.innerHTML=`<span>${multi()?esc(curP().name):D.active.editId?'Đang sửa':'Đang tập'} · ${esc(D.active.name)}</span><b class="elapsed"></b>`}else mini.hidden=true;
+ postRender();tick();wake();
+}
+function postRender(){
+ const ec=$('#exchart');if(ec){const m=MET[S.met];const pts=exHistory(S.exId).slice().reverse().map(x=>({x:x.w.start,y:m.f(best(x.sets))})).filter(p=>p.y>0);chart(ec,pts,m.u)}
+ const bc=$('#bodychart');if(bc){const pts=D.body.filter(b=>S.bm==='kg'?b.kg:b.bf).sort((a,b)=>a.d-b.d).map(b=>({x:b.d,y:S.bm==='kg'?b.kg:b.bf}));chart(bc,pts,S.bm==='kg'?'kg':'%')}
+}
+
+/* ---------- illustrations (ảnh: free-exercise-db, public domain) ---------- */
+const CUES={"bench":["Ép bả vai ra sau và xuống, lưng cong nhẹ, hai chân bám chặt sàn","Hạ thanh chạm ngực dưới, khuỷu tạo góc khoảng 45–70° với thân","Đẩy lên theo đường hơi chéo về phía mặt, giữ bả vai ép suốt hiệp"],"incl-db":["Ghế nghiêng 30–45°, bả vai ép sát ghế","Hạ tạ ngang ngực trên, khuỷu nằm dưới tạ, hơi khép vào thân","Đẩy lên và hơi chụm vào, không đập hai tạ vào nhau"],"db-bench":["Đặt tạ lên đùi rồi ngả lưng để đưa tạ vào vị trí","Hạ chậm đến khi tạ ngang ngực, cảm nhận ngực giãn","Đẩy lên, cổ tay luôn thẳng phía trên khuỷu"],"incl-bb":["Ghế nghiêng 30–45°, nắm rộng hơn vai một chút","Hạ thanh xuống ngực trên, ngay dưới xương đòn","Giữ bả vai ép, đẩy thẳng lên phía trên vai"],"chest-press":["Chỉnh ghế để tay cầm ngang giữa ngực","Đẩy ra, không khoá khuỷu, lưng áp sát đệm","Về chậm 2–3 giây, không để tạ chạm chồng"],"cable-fly":["Đứng giữa hai ròng rọc, bước một chân lên trước, thân hơi đổ","Khuỷu hơi cong và giữ cố định, khép tay theo vòng cung trước ngực","Mở ra chậm đến khi ngực căng, không kéo bằng tay sau"],"pec-deck":["Chỉnh ghế để tay cầm ngang vai","Khép tay bằng lực ngực, giữ 1 giây ở giữa","Mở ra có kiểm soát, vai không chúi về trước"],"dip":["Đổ người về trước để ngực làm việc nhiều hơn","Hạ đến khi vai ngang khuỷu; dừng sớm hơn nếu đau vai","Đẩy lên, không khoá khuỷu mạnh"],"pushup":["Tay rộng hơn vai một chút, thân thẳng từ đầu tới gót","Siết bụng và mông, không võng lưng","Hạ ngực sát sàn, khuỷu khoảng 45° so với thân"],"ohp":["Nắm ngang vai, siết mông và bụng, không ngả lưng","Hơi lùi đầu ra sau để thanh đi thẳng qua mặt","Ở điểm cao nhất đưa đầu về trước, thanh nằm trên giữa bàn chân"],"db-sp":["Ngồi tựa lưng ghế, tạ ngang tai","Đẩy lên và hơi chụm, không đập hai tạ","Hạ đến khi khuỷu ngang hoặc hơi thấp hơn vai"],"lat-raise":["Khuỷu hơi cong, nâng tạ sang hai bên tới ngang vai","Dẫn bằng khuỷu, không nhún vai","Hạ chậm, không lấy đà bằng thân"],"cable-lat":["Ròng rọc đặt thấp, tay kéo nằm ở phía bên kia người","Nâng tới ngang vai, khuỷu hơi cong","Giữ cáp căng suốt hành trình, hạ chậm"],"face-pull":["Ròng rọc ngang hoặc cao hơn mặt, dùng dây thừng","Kéo về phía mặt, tách hai đầu dây, khuỷu nâng cao","Cuối động tác xoay vai ra ngoài và ép bả vai"],"rear-fly":["Gập người khoảng 45–90°, lưng thẳng","Mở tay sang hai bên, khuỷu hơi cong","Dùng vai sau, không kéo bằng lưng hay lấy đà"],"pushdown":["Khuỷu khép sát thân và giữ cố định","Đẩy xuống đến khi duỗi hẳn tay, siết tay sau","Thả lên chậm đến khi cẳng tay ngang sàn"],"oh-ext":["Quay lưng về ròng rọc, tay cầm ở sau đầu","Khuỷu hướng về trước và giữ gần đầu","Duỗi thẳng tay qua đầu, về chậm để giãn tay sau"],"skull":["Nằm trên ghế, thanh tạ trên ngực, tay duỗi thẳng","Chỉ gập khuỷu, hạ thanh về trán hoặc ra sau đầu","Cánh tay trên giữ cố định khi duỗi lên"],"db-curl":["Khuỷu sát thân, không đẩy khuỷu ra trước","Cuộn tạ lên, xoay lòng bàn tay ngửa dần","Hạ chậm hết tầm, không lấy đà bằng lưng"],"bb-curl":["Nắm rộng bằng vai, đứng thẳng, khuỷu sát thân","Cuộn lên tới ngang vai, siết bắp tay","Hạ chậm 2–3 giây, không ngả người"],"hammer":["Lòng bàn tay hướng vào nhau suốt động tác","Khuỷu sát thân, cuộn lên tới ngang vai","Hạ chậm; có thể tập luân phiên hai tay"],"preacher":["Nách sát mép đệm, cánh tay áp lên đệm","Cuộn lên, không nhấc cánh tay khỏi đệm","Hạ gần duỗi hẳn nhưng có kiểm soát"],"cable-curl":["Đứng gần ròng rọc thấp, khuỷu sát thân","Cuộn lên, giữ căng ở đỉnh 1 giây","Hạ chậm, không ngả người ra sau"],"deadlift":["Thanh tạ sát ống quyển, nằm trên giữa bàn chân","Hông cao hơn gối, lưng thẳng, siết lưng trước khi kéo","Đạp sàn bằng chân, giữ thanh sát người, đứng thẳng không ngả ra sau"],"pullup":["Nắm rộng hơn vai, treo thẳng tay","Kéo bả vai xuống trước, rồi kéo khuỷu về phía hông","Lên tới khi cằm qua xà, hạ chậm hết tầm"],"chinup":["Nắm ngửa, rộng bằng vai","Kéo ngực về phía xà, khuỷu đi xuống trước người","Hạ chậm tới khi duỗi tay"],"pulldown":["Nắm rộng, ưỡn ngực nhẹ, người hơi ngả sau","Kéo thanh về ngực trên, khuỷu đi xuống và ra sau","Thả lên chậm để lưng xô giãn"],"bb-row":["Gập người khoảng 45°, lưng thẳng, gối hơi chùng","Kéo thanh về bụng dưới, ép bả vai","Hạ có kiểm soát, giữ nguyên góc thân"],"cable-row":["Ngồi thẳng, gối hơi chùng","Kéo tay cầm về bụng, ưỡn ngực, ép bả vai","Duỗi tay về trước để giãn lưng, không gù lưng"],"db-row":["Một tay và một gối chống ghế, lưng phẳng","Kéo tạ về phía hông, khuỷu sát thân","Hạ chậm để giãn xô, không xoay thân"],"tbar":["Đứng hai bên thanh, gập người, lưng thẳng","Kéo tay cầm về ngực dưới, ép bả vai","Hạ chậm, không giật bằng hông"],"shrug":["Đứng thẳng, tay buông tạ hai bên","Nhún vai thẳng lên về phía tai, giữ 1 giây","Hạ chậm, không xoay vai thành vòng"],"squat":["Thanh tạ trên cơ thang, chân rộng bằng vai, mũi chân hơi mở","Hít sâu, siết bụng, ngồi xuống với gối đi theo hướng mũi chân","Xuống tới đùi song song sàn hoặc thấp hơn, đạp lên bằng cả bàn chân"],"legpress":["Đặt chân giữa bàn đạp, rộng bằng vai","Hạ tới khi gối khoảng 90°, lưng dưới không nhấc khỏi đệm","Đẩy lên, không khoá gối"],"hack":["Lưng và vai áp sát đệm, chân đặt hơi lên trước","Hạ sâu có kiểm soát, gối theo hướng mũi chân","Đẩy bằng gót và giữa bàn chân, không khoá gối"],"rdl":["Đứng thẳng, gối hơi chùng và giữ cố định","Đẩy hông ra sau, thanh trượt dọc đùi, lưng thẳng","Hạ tới khi đùi sau căng (thường ngang ống quyển), siết mông để đứng lên"],"leg-curl":["Đệm chặn ngay trên gót, gối nằm ở mép ghế","Cuộn gót về phía mông, hông không nhấc khỏi đệm","Hạ chậm 2–3 giây"],"seat-curl":["Tựa lưng, đệm trên đè chặt đùi","Gập gối, kéo gót xuống dưới ghế","Về chậm, không để tạ chạm chồng"],"leg-ext":["Gối thẳng hàng với trục máy, đệm đặt ở cổ chân","Duỗi thẳng chân, siết đùi trước 1 giây","Hạ chậm, không đá chân"],"bss":["Mu bàn chân sau đặt lên ghế, chân trước bước xa","Hạ thẳng người xuống, gối trước theo hướng mũi chân","Thân hơi đổ về trước để mông làm việc nhiều hơn; đẩy lên bằng chân trước"],"lunge":["Bước dài về trước, thân thẳng","Hạ tới khi gối sau gần chạm sàn, hai gối khoảng 90°","Đẩy bằng gót chân trước để về vị trí"],"goblet":["Ôm tạ trước ngực, khuỷu hướng xuống","Ngồi sâu giữa hai chân, ưỡn ngực","Ở điểm thấp nhất khuỷu chạm mặt trong gối, rồi đẩy lên"],"calf":["Đặt mũi chân trên mép bục, gót buông","Nhón lên cao hết cỡ, giữ 1 giây","Hạ gót xuống thấp hơn mép bục để giãn bắp chân"],"hip-thrust":["Lưng trên tựa mép ghế, thanh tạ trên hông (nên có đệm)","Đẩy hông lên tới khi thân nằm ngang, siết mông","Cằm hơi cúi, không ưỡn lưng dưới ở điểm cao nhất"],"abduct":["Ngồi thẳng, đệm áp mặt ngoài gối","Đẩy hai chân ra ngoài, giữ 1 giây","Về chậm có kiểm soát"],"hlr":["Treo xà, siết vai, không đung đưa","Nâng chân (hoặc gối) lên bằng cách cuộn hông","Hạ chậm, không lấy đà"],"cable-crunch":["Quỳ dưới ròng rọc cao, dây thừng sát đầu","Cuộn người, đưa khuỷu về phía đùi bằng cơ bụng","Hông giữ cố định, không ngồi xuống để kéo"],"crunch":["Nằm ngửa, gối gập, tay đặt nhẹ sau đầu","Cuộn vai lên khỏi sàn bằng cơ bụng, không kéo cổ","Hạ chậm, bụng luôn căng"]};
+const LOCAL=new Set(Object.keys(CUES));
+const REFS='3_4_Sit-Up|90_90_Hamstring|Ab_Crunch_Machine|Ab_Roller|Adductor|Adductor_Groin|Advanced_Kettlebell_Windmill|Air_Bike|All_Fours_Quad_Stretch|Alternate_Hammer_Curl|Alternate_Heel_Touchers|Alternate_Incline_Dumbbell_Curl|Alternate_Leg_Diagonal_Bound|Alternating_Cable_Shoulder_Press|Alternating_Deltoid_Raise|Alternating_Floor_Press|Alternating_Hang_Clean|Alternating_Kettlebell_Press|Alternating_Kettlebell_Row|Alternating_Renegade_Row|Ankle_Circles|Ankle_On_The_Knee|Anterior_Tibialis-SMR|Anti-Gravity_Press|Arm_Circles|Arnold_Dumbbell_Press|Around_The_Worlds|Atlas_Stone_Trainer|Atlas_Stones|Axle_Deadlift|Back_Flyes_-_With_Bands|Backward_Drag|Backward_Medicine_Ball_Throw|Balance_Board|Ball_Leg_Curl|Band_Assisted_Pull-Up|Band_Good_Morning|Band_Good_Morning_Pull_Through|Band_Hip_Adductions|Band_Pull_Apart|Band_Skull_Crusher|Barbell_Ab_Rollout|Barbell_Ab_Rollout_-_On_Knees|Barbell_Bench_Press_-_Medium_Grip|Barbell_Curl|Barbell_Curls_Lying_Against_An_Incline|Barbell_Deadlift|Barbell_Full_Squat|Barbell_Glute_Bridge|Barbell_Guillotine_Bench_Press|Barbell_Hack_Squat|Barbell_Hip_Thrust|Barbell_Incline_Bench_Press_-_Medium_Grip|Barbell_Incline_Shoulder_Raise|Barbell_Lunge|Barbell_Rear_Delt_Row|Barbell_Rollout_from_Bench|Barbell_Seated_Calf_Raise|Barbell_Shoulder_Press|Barbell_Shrug|Barbell_Shrug_Behind_The_Back|Barbell_Side_Bend|Barbell_Side_Split_Squat|Barbell_Squat|Barbell_Squat_To_A_Bench|Barbell_Step_Ups|Barbell_Walking_Lunge|Battling_Ropes|Bear_Crawl_Sled_Drags|Behind_Head_Chest_Stretch|Bench_Dips|Bench_Jump|Bench_Press_-_Powerlifting|Bench_Press_-_With_Bands|Bench_Press_with_Chains|Bench_Sprint|Bent-Arm_Barbell_Pullover|Bent-Arm_Dumbbell_Pullover|Bent-Knee_Hip_Raise|Bent_Over_Barbell_Row|Bent_Over_Dumbbell_Rear_Delt_Raise_With_Head_On_Bench|Bent_Over_Low-Pulley_Side_Lateral|Bent_Over_One-Arm_Long_Bar_Row|Bent_Over_Two-Arm_Long_Bar_Row|Bent_Over_Two-Dumbbell_Row|Bent_Over_Two-Dumbbell_Row_With_Palms_In|Bent_Press|Bicycling|Bicycling_Stationary|Board_Press|Body-Up|Body_Tricep_Press|Bodyweight_Flyes|Bodyweight_Mid_Row|Bodyweight_Squat|Bodyweight_Walking_Lunge|Bosu_Ball_Cable_Crunch_With_Side_Bends|Bottoms-Up_Clean_From_The_Hang_Position|Bottoms_Up|Box_Jump_Multiple_Response|Box_Skip|Box_Squat|Box_Squat_with_Bands|Box_Squat_with_Chains|Brachialis-SMR|Bradford_Rocky_Presses|Butt-Ups|Butt_Lift_Bridge|Butterfly|Cable_Chest_Press|Cable_Crossover|Cable_Crunch|Cable_Deadlifts|Cable_Hammer_Curls_-_Rope_Attachment|Cable_Hip_Adduction|Cable_Incline_Pushdown|Cable_Incline_Triceps_Extension|Cable_Internal_Rotation|Cable_Iron_Cross|Cable_Judo_Flip|Cable_Lying_Triceps_Extension|Cable_One_Arm_Tricep_Extension|Cable_Preacher_Curl|Cable_Rear_Delt_Fly|Cable_Reverse_Crunch|Cable_Rope_Overhead_Triceps_Extension|Cable_Rope_Rear-Delt_Rows|Cable_Russian_Twists|Cable_Seated_Crunch|Cable_Seated_Lateral_Raise|Cable_Shoulder_Press|Cable_Shrugs|Cable_Wrist_Curl|Calf-Machine_Shoulder_Shrug|Calf_Press|Calf_Press_On_The_Leg_Press_Machine|Calf_Raise_On_A_Dumbbell|Calf_Raises_-_With_Bands|Calf_Stretch_Elbows_Against_Wall|Calf_Stretch_Hands_Against_Wall|Calves-SMR|Car_Deadlift|Car_Drivers|Carioca_Quick_Step|Cat_Stretch|Catch_and_Overhead_Throw|Chain_Handle_Extension|Chain_Press|Chair_Leg_Extended_Stretch|Chair_Lower_Back_Stretch|Chair_Squat|Chair_Upper_Body_Stretch|Chest_And_Front_Of_Shoulder_Stretch|Chest_Push_from_3_point_stance|Chest_Push_multiple_response|Chest_Push_single_response|Chest_Push_with_Run_Release|Chest_Stretch_on_Stability_Ball|Childs_Pose|Chin-Up|Chin_To_Chest_Stretch|Circus_Bell|Clean|Clean_Deadlift|Clean_Pull|Clean_Shrug|Clean_and_Jerk|Clean_and_Press|Clean_from_Blocks|Clock_Push-Up|Close-Grip_Barbell_Bench_Press|Close-Grip_Dumbbell_Press|Close-Grip_EZ-Bar_Curl_with_Band|Close-Grip_EZ-Bar_Press|Close-Grip_EZ_Bar_Curl|Close-Grip_Front_Lat_Pulldown|Close-Grip_Push-Up_off_of_a_Dumbbell|Close-Grip_Standing_Barbell_Curl|Cocoons|Conans_Wheel|Concentration_Curls|Cross-Body_Crunch|Cross_Body_Hammer_Curl|Cross_Over_-_With_Bands|Crossover_Reverse_Lunge|Crucifix|Crunch_-_Hands_Overhead|Crunch_-_Legs_On_Exercise_Ball|Crunches|Cuban_Press|Dancers_Stretch|Dead_Bug|Deadlift_with_Bands|Deadlift_with_Chains|Decline_Barbell_Bench_Press|Decline_Close-Grip_Bench_To_Skull_Crusher|Decline_Crunch|Decline_Dumbbell_Bench_Press|Decline_Dumbbell_Flyes|Decline_Dumbbell_Triceps_Extension|Decline_EZ_Bar_Triceps_Extension|Decline_Oblique_Crunch|Decline_Push-Up|Decline_Reverse_Crunch|Decline_Smith_Press|Deficit_Deadlift|Depth_Jump_Leap|Dip_Machine|Dips_-_Chest_Version|Dips_-_Triceps_Version|Donkey_Calf_Raises|Double_Kettlebell_Alternating_Hang_Clean|Double_Kettlebell_Jerk|Double_Kettlebell_Push_Press|Double_Kettlebell_Snatch|Double_Kettlebell_Windmill|Double_Leg_Butt_Kick|Downward_Facing_Balance|Drag_Curl|Drop_Push|Dumbbell_Alternate_Bicep_Curl|Dumbbell_Bench_Press|Dumbbell_Bench_Press_with_Neutral_Grip|Dumbbell_Bicep_Curl|Dumbbell_Clean|Dumbbell_Floor_Press|Dumbbell_Flyes|Dumbbell_Incline_Row|Dumbbell_Incline_Shoulder_Raise|Dumbbell_Lunges|Dumbbell_Lying_One-Arm_Rear_Lateral_Raise|Dumbbell_Lying_Pronation|Dumbbell_Lying_Rear_Lateral_Raise|Dumbbell_Lying_Supination|Dumbbell_One-Arm_Shoulder_Press|Dumbbell_One-Arm_Triceps_Extension|Dumbbell_One-Arm_Upright_Row|Dumbbell_Prone_Incline_Curl|Dumbbell_Raise|Dumbbell_Rear_Lunge|Dumbbell_Scaption|Dumbbell_Seated_Box_Jump|Dumbbell_Seated_One-Leg_Calf_Raise|Dumbbell_Shoulder_Press|Dumbbell_Shrug|Dumbbell_Side_Bend|Dumbbell_Squat|Dumbbell_Squat_To_A_Bench|Dumbbell_Step_Ups|Dumbbell_Tricep_Extension_-Pronated_Grip|Dynamic_Back_Stretch|Dynamic_Chest_Stretch|EZ-Bar_Curl|EZ-Bar_Skullcrusher|Elbow_Circles|Elbow_to_Knee|Elbows_Back|Elevated_Back_Lunge|Elevated_Cable_Rows|Elliptical_Trainer|Exercise_Ball_Crunch|Exercise_Ball_Pull-In|Extended_Range_One-Arm_Kettlebell_Floor_Press|External_Rotation|External_Rotation_with_Band|External_Rotation_with_Cable|Face_Pull|Farmers_Walk|Fast_Skipping|Finger_Curls|Flat_Bench_Cable_Flyes|Flat_Bench_Leg_Pull-In|Flat_Bench_Lying_Leg_Raise|Flexor_Incline_Dumbbell_Curls|Floor_Glute-Ham_Raise|Floor_Press|Floor_Press_with_Chains|Flutter_Kicks|Foot-SMR|Forward_Drag_with_Press|Frankenstein_Squat|Freehand_Jump_Squat|Frog_Hops|Frog_Sit-Ups|Front_Barbell_Squat|Front_Barbell_Squat_To_A_Bench|Front_Box_Jump|Front_Cable_Raise|Front_Cone_Hops_or_hurdle_hops|Front_Dumbbell_Raise|Front_Incline_Dumbbell_Raise|Front_Leg_Raises|Front_Plate_Raise|Front_Raise_And_Pullover|Front_Squat_Clean_Grip|Front_Squats_With_Two_Kettlebells|Front_Two-Dumbbell_Raise|Full_Range-Of-Motion_Lat_Pulldown|Gironda_Sternum_Chins|Glute_Ham_Raise|Glute_Kickback|Goblet_Squat|Good_Morning|Good_Morning_off_Pins|Gorilla_Chin_Crunch|Groin_and_Back_Stretch|Groiners|Hack_Squat|Hammer_Curls|Hammer_Grip_Incline_DB_Bench_Press|Hamstring-SMR|Hamstring_Stretch|Handstand_Push-Ups|Hang_Clean|Hang_Clean_-_Below_the_Knees|Hang_Snatch|Hang_Snatch_-_Below_Knees|Hanging_Bar_Good_Morning|Hanging_Leg_Raise|Hanging_Pike|Heaving_Snatch_Balance|Heavy_Bag_Thrust|High_Cable_Curls|Hip_Circles_prone|Hip_Extension_with_Bands|Hip_Flexion_with_Band|Hip_Lift_with_Band|Hug_A_Ball|Hug_Knees_To_Chest|Hurdle_Hops|Hyperextensions_Back_Extensions|Hyperextensions_With_No_Hyperextension_Bench|IT_Band_and_Glute_Stretch|Iliotibial_Tract-SMR|Inchworm|Incline_Barbell_Triceps_Extension|Incline_Bench_Pull|Incline_Cable_Chest_Press|Incline_Cable_Flye|Incline_Dumbbell_Bench_With_Palms_Facing_In|Incline_Dumbbell_Curl|Incline_Dumbbell_Flyes|Incline_Dumbbell_Flyes_-_With_A_Twist|Incline_Dumbbell_Press|Incline_Hammer_Curls|Incline_Inner_Biceps_Curl|Incline_Push-Up|Incline_Push-Up_Close-Grip|Incline_Push-Up_Depth_Jump|Incline_Push-Up_Medium|Incline_Push-Up_Reverse_Grip|Incline_Push-Up_Wide|Intermediate_Groin_Stretch|Intermediate_Hip_Flexor_and_Quad_Stretch|Internal_Rotation_with_Band|Inverted_Row|Inverted_Row_with_Straps|Iron_Cross|Iron_Crosses_stretch|Isometric_Chest_Squeezes|Isometric_Neck_Exercise_-_Front_And_Back|Isometric_Neck_Exercise_-_Sides|Isometric_Wipers|JM_Press|Jackknife_Sit-Up|Janda_Sit-Up|Jefferson_Squats|Jerk_Balance|Jerk_Dip_Squat|Jogging_Treadmill|Keg_Load|Kettlebell_Arnold_Press|Kettlebell_Dead_Clean|Kettlebell_Figure_8|Kettlebell_Halo|Kettlebell_Halo_With_Overhead_Extension|Kettlebell_Hang_Clean|Kettlebell_One-Legged_Deadlift|Kettlebell_Overhead_Triceps_Extension|Kettlebell_Pass_Between_The_Legs|Kettlebell_Pirate_Ships|Kettlebell_Pistol_Squat|Kettlebell_Seated_Press|Kettlebell_Seesaw_Press|Kettlebell_Sumo_High_Pull|Kettlebell_Thruster|Kettlebell_Turkish_Get-Up_Lunge_style|Kettlebell_Turkish_Get-Up_Squat_style|Kettlebell_Windmill|Kipping_Muscle_Up|Knee_Across_The_Body|Knee_Circles|Knee_Hip_Raise_On_Parallel_Bars|Knee_Tuck_Jump|Kneeling_Arm_Drill|Kneeling_Cable_Crunch_With_Alternating_Oblique_Twists|Kneeling_Cable_Triceps_Extension|Kneeling_Forearm_Stretch|Kneeling_High_Pulley_Row|Kneeling_Hip_Flexor|Kneeling_Jump_Squat|Kneeling_Single-Arm_High_Pulley_Row|Kneeling_Squat|Landmine_180s|Landmine_Linear_Jammer|Lateral_Bound|Lateral_Box_Jump|Lateral_Cone_Hops|Lateral_Raise_-_With_Bands|Latissimus_Dorsi-SMR|Leg-Over_Floor_Press|Leg-Up_Hamstring_Stretch|Leg_Extensions|Leg_Lift|Leg_Press|Leg_Pull-In|Leverage_Chest_Press|Leverage_Deadlift|Leverage_Decline_Chest_Press|Leverage_High_Row|Leverage_Incline_Chest_Press|Leverage_Iso_Row|Leverage_Shoulder_Press|Leverage_Shrug|Linear_3-Part_Start_Technique|Linear_Acceleration_Wall_Drill|Linear_Depth_Jump|Log_Lift|London_Bridges|Looking_At_Ceiling|Low_Cable_Crossover|Low_Cable_Triceps_Extension|Low_Pulley_Row_To_Neck|Lower_Back-SMR|Lower_Back_Curl|Lunge_Pass_Through|Lunge_Sprint|Lying_Bent_Leg_Groin|Lying_Cable_Curl|Lying_Cambered_Barbell_Row|Lying_Close-Grip_Bar_Curl_On_High_Pulley|Lying_Close-Grip_Barbell_Triceps_Extension_Behind_The_Head|Lying_Close-Grip_Barbell_Triceps_Press_To_Chin|Lying_Crossover|Lying_Dumbbell_Tricep_Extension|Lying_Face_Down_Plate_Neck_Resistance|Lying_Face_Up_Plate_Neck_Resistance|Lying_Glute|Lying_Hamstring|Lying_High_Bench_Barbell_Curl|Lying_Leg_Curls|Lying_Machine_Squat|Lying_One-Arm_Lateral_Raise|Lying_Prone_Quadriceps|Lying_Rear_Delt_Raise|Lying_Supine_Dumbbell_Curl|Lying_T-Bar_Row|Lying_Triceps_Press|Machine_Bench_Press|Machine_Bicep_Curl|Machine_Preacher_Curls|Machine_Shoulder_Military_Press|Machine_Triceps_Extension|Medicine_Ball_Chest_Pass|Medicine_Ball_Full_Twist|Medicine_Ball_Scoop_Throw|Middle_Back_Shrug|Middle_Back_Stretch|Mixed_Grip_Chin|Monster_Walk|Mountain_Climbers|Moving_Claw_Series|Muscle_Snatch|Muscle_Up|Narrow_Stance_Hack_Squats|Narrow_Stance_Leg_Press|Narrow_Stance_Squats|Natural_Glute_Ham_Raise|Neck-SMR|Neck_Press|Oblique_Crunches|Oblique_Crunches_-_On_The_Floor|Olympic_Squat|On-Your-Back_Quad_Stretch|On_Your_Side_Quad_Stretch|One-Arm_Dumbbell_Row|One-Arm_Flat_Bench_Dumbbell_Flye|One-Arm_High-Pulley_Cable_Side_Bends|One-Arm_Incline_Lateral_Raise|One-Arm_Kettlebell_Clean|One-Arm_Kettlebell_Clean_and_Jerk|One-Arm_Kettlebell_Floor_Press|One-Arm_Kettlebell_Jerk|One-Arm_Kettlebell_Military_Press_To_The_Side|One-Arm_Kettlebell_Para_Press|One-Arm_Kettlebell_Push_Press|One-Arm_Kettlebell_Row|One-Arm_Kettlebell_Snatch|One-Arm_Kettlebell_Split_Jerk|One-Arm_Kettlebell_Split_Snatch|One-Arm_Kettlebell_Swings|One-Arm_Long_Bar_Row|One-Arm_Medicine_Ball_Slam|One-Arm_Open_Palm_Kettlebell_Clean|One-Arm_Overhead_Kettlebell_Squats|One-Arm_Side_Deadlift|One-Arm_Side_Laterals|One-Legged_Cable_Kickback|One_Arm_Against_Wall|One_Arm_Chin-Up|One_Arm_Dumbbell_Bench_Press|One_Arm_Dumbbell_Preacher_Curl|One_Arm_Floor_Press|One_Arm_Lat_Pulldown|One_Arm_Pronated_Dumbbell_Triceps_Extension|One_Arm_Supinated_Dumbbell_Triceps_Extension|One_Half_Locust|One_Handed_Hang|One_Knee_To_Chest|One_Leg_Barbell_Squat|Open_Palm_Kettlebell_Clean|Otis-Up|Overhead_Cable_Curl|Overhead_Lat|Overhead_Slam|Overhead_Squat|Overhead_Stretch|Overhead_Triceps|Pallof_Press|Pallof_Press_With_Rotation|Palms-Down_Dumbbell_Wrist_Curl_Over_A_Bench|Palms-Down_Wrist_Curl_Over_A_Bench|Palms-Up_Barbell_Wrist_Curl_Over_A_Bench|Palms-Up_Dumbbell_Wrist_Curl_Over_A_Bench|Parallel_Bar_Dip|Pelvic_Tilt_Into_Bridge|Peroneals-SMR|Peroneals_Stretch|Physioball_Hip_Bridge|Pin_Presses|Piriformis-SMR|Plank|Plate_Pinch|Plate_Twist|Platform_Hamstring_Slides|Plie_Dumbbell_Squat|Plyo_Kettlebell_Pushups|Plyo_Push-up|Posterior_Tibialis_Stretch|Power_Clean|Power_Clean_from_Blocks|Power_Jerk|Power_Partials|Power_Snatch|Power_Snatch_from_Blocks|Power_Stairs|Preacher_Curl|Preacher_Hammer_Dumbbell_Curl|Press_Sit-Up|Prone_Manual_Hamstring|Prowler_Sprint|Pull_Through|Pullups|Push-Up_Wide|Push-Ups_-_Close_Triceps_Position|Push-Ups_With_Feet_Elevated|Push-Ups_With_Feet_On_An_Exercise_Ball|Push_Press|Push_Press_-_Behind_the_Neck|Push_Up_to_Side_Plank|Pushups|Pushups_Close_and_Wide_Hand_Positions|Pyramid|Quad_Stretch|Quadriceps-SMR|Quick_Leap|Rack_Delivery|Rack_Pull_with_Bands|Rack_Pulls|Rear_Leg_Raises|Recumbent_Bike|Return_Push_from_Stance|Reverse_Band_Bench_Press|Reverse_Band_Box_Squat|Reverse_Band_Deadlift|Reverse_Band_Power_Squat|Reverse_Band_Sumo_Deadlift|Reverse_Barbell_Curl|Reverse_Barbell_Preacher_Curls|Reverse_Cable_Curl|Reverse_Crunch|Reverse_Flyes|Reverse_Flyes_With_External_Rotation|Reverse_Grip_Bent-Over_Rows|Reverse_Grip_Triceps_Pushdown|Reverse_Hyperextension|Reverse_Machine_Flyes|Reverse_Plate_Curls|Reverse_Triceps_Bench_Press|Rhomboids-SMR|Rickshaw_Carry|Rickshaw_Deadlift|Ring_Dips|Rocket_Jump|Rocking_Standing_Calf_Raise|Rocky_Pull-Ups_Pulldowns|Romanian_Deadlift|Romanian_Deadlift_from_Deficit|Rope_Climb|Rope_Crunch|Rope_Jumping|Rope_Straight-Arm_Pulldown|Round_The_World_Shoulder_Stretch|Rowing_Stationary|Runners_Stretch|Running_Treadmill|Russian_Twist|Sandbag_Load|Scapular_Pull-Up|Scissor_Kick|Scissors_Jump|Seated_Band_Hamstring_Curl|Seated_Barbell_Military_Press|Seated_Barbell_Twist|Seated_Bent-Over_One-Arm_Dumbbell_Triceps_Extension|Seated_Bent-Over_Rear_Delt_Raise|Seated_Bent-Over_Two-Arm_Dumbbell_Triceps_Extension|Seated_Biceps|Seated_Cable_Rows|Seated_Cable_Shoulder_Press|Seated_Calf_Raise|Seated_Calf_Stretch|Seated_Close-Grip_Concentration_Barbell_Curl|Seated_Dumbbell_Curl|Seated_Dumbbell_Inner_Biceps_Curl|Seated_Dumbbell_Palms-Down_Wrist_Curl|Seated_Dumbbell_Palms-Up_Wrist_Curl|Seated_Dumbbell_Press|Seated_Flat_Bench_Leg_Pull-In|Seated_Floor_Hamstring_Stretch|Seated_Front_Deltoid|Seated_Glute|Seated_Good_Mornings|Seated_Hamstring|Seated_Hamstring_and_Calf_Stretch|Seated_Head_Harness_Neck_Resistance|Seated_Leg_Curl|Seated_Leg_Tucks|Seated_One-Arm_Dumbbell_Palms-Down_Wrist_Curl|Seated_One-Arm_Dumbbell_Palms-Up_Wrist_Curl|Seated_One-arm_Cable_Pulley_Rows|Seated_Overhead_Stretch|Seated_Palm-Up_Barbell_Wrist_Curl|Seated_Palms-Down_Barbell_Wrist_Curl|Seated_Side_Lateral_Raise|Seated_Triceps_Press|Seated_Two-Arm_Palms-Up_Low-Pulley_Wrist_Curl|See-Saw_Press_Alternating_Side_Press|Shotgun_Row|Shoulder_Circles|Shoulder_Press_-_With_Bands|Shoulder_Raise|Shoulder_Stretch|Side-Lying_Floor_Stretch|Side_Bridge|Side_Hop-Sprint|Side_Jackknife|Side_Lateral_Raise|Side_Laterals_to_Front_Raise|Side_Leg_Raises|Side_Lying_Groin_Stretch|Side_Neck_Stretch|Side_Standing_Long_Jump|Side_To_Side_Chins|Side_Wrist_Pull|Side_to_Side_Box_Shuffle|Single-Arm_Cable_Crossover|Single-Arm_Linear_Jammer|Single-Arm_Push-Up|Single-Cone_Sprint_Drill|Single-Leg_High_Box_Squat|Single-Leg_Hop_Progression|Single-Leg_Lateral_Hop|Single-Leg_Leg_Extension|Single-Leg_Stride_Jump|Single_Dumbbell_Raise|Single_Leg_Butt_Kick|Single_Leg_Glute_Bridge|Single_Leg_Push-off|Sit-Up|Sit_Squats|Skating|Sled_Drag_-_Harness|Sled_Overhead_Backward_Walk|Sled_Overhead_Triceps_Extension|Sled_Push|Sled_Reverse_Flye|Sled_Row|Sledgehammer_Swings|Smith_Incline_Shoulder_Raise|Smith_Machine_Behind_the_Back_Shrug|Smith_Machine_Bench_Press|Smith_Machine_Bent_Over_Row|Smith_Machine_Calf_Raise|Smith_Machine_Close-Grip_Bench_Press|Smith_Machine_Decline_Press|Smith_Machine_Hang_Power_Clean|Smith_Machine_Hip_Raise|Smith_Machine_Incline_Bench_Press|Smith_Machine_Leg_Press|Smith_Machine_One-Arm_Upright_Row|Smith_Machine_Overhead_Shoulder_Press|Smith_Machine_Pistol_Squat|Smith_Machine_Reverse_Calf_Raises|Smith_Machine_Squat|Smith_Machine_Stiff-Legged_Deadlift|Smith_Machine_Upright_Row|Smith_Single-Leg_Split_Squat|Snatch|Snatch_Balance|Snatch_Deadlift|Snatch_Pull|Snatch_Shrug|Snatch_from_Blocks|Speed_Band_Overhead_Triceps|Speed_Box_Squat|Speed_Squats|Spell_Caster|Spider_Crawl|Spider_Curl|Spinal_Stretch|Split_Clean|Split_Jerk|Split_Jump|Split_Snatch|Split_Squat_with_Dumbbells|Split_Squats|Squat_Jerk|Squat_with_Bands|Squat_with_Chains|Squat_with_Plate_Movers|Squats_-_With_Bands|Stairmaster|Standing_Alternating_Dumbbell_Press|Standing_Barbell_Calf_Raise|Standing_Barbell_Press_Behind_Neck|Standing_Bent-Over_One-Arm_Dumbbell_Triceps_Extension|Standing_Bent-Over_Two-Arm_Dumbbell_Triceps_Extension|Standing_Biceps_Cable_Curl|Standing_Biceps_Stretch|Standing_Bradford_Press|Standing_Cable_Chest_Press|Standing_Cable_Lift|Standing_Cable_Wood_Chop|Standing_Calf_Raises|Standing_Concentration_Curl|Standing_Dumbbell_Calf_Raise|Standing_Dumbbell_Press|Standing_Dumbbell_Reverse_Curl|Standing_Dumbbell_Straight-Arm_Front_Delt_Raise_Above_Head|Standing_Dumbbell_Triceps_Extension|Standing_Dumbbell_Upright_Row|Standing_Elevated_Quad_Stretch|Standing_Front_Barbell_Raise_Over_Head|Standing_Gastrocnemius_Calf_Stretch|Standing_Hamstring_and_Calf_Stretch|Standing_Hip_Circles|Standing_Hip_Flexors|Standing_Inner-Biceps_Curl|Standing_Lateral_Stretch|Standing_Leg_Curl|Standing_Long_Jump|Standing_Low-Pulley_Deltoid_Raise|Standing_Low-Pulley_One-Arm_Triceps_Extension|Standing_Military_Press|Standing_Olympic_Plate_Hand_Squeeze|Standing_One-Arm_Cable_Curl|Standing_One-Arm_Dumbbell_Curl_Over_Incline_Bench|Standing_One-Arm_Dumbbell_Triceps_Extension|Standing_Overhead_Barbell_Triceps_Extension|Standing_Palm-In_One-Arm_Dumbbell_Press|Standing_Palms-In_Dumbbell_Press|Standing_Palms-Up_Barbell_Behind_The_Back_Wrist_Curl|Standing_Pelvic_Tilt|Standing_Rope_Crunch|Standing_Soleus_And_Achilles_Stretch|Standing_Toe_Touches|Standing_Towel_Triceps_Extension|Standing_Two-Arm_Overhead_Throw|Star_Jump|Step-up_with_Knee_Raise|Step_Mill|Stiff-Legged_Barbell_Deadlift|Stiff-Legged_Dumbbell_Deadlift|Stiff_Leg_Barbell_Good_Morning|Stomach_Vacuum|Straight-Arm_Dumbbell_Pullover|Straight-Arm_Pulldown|Straight_Bar_Bench_Mid_Rows|Straight_Raises_on_Incline_Bench|Stride_Jump_Crossover|Sumo_Deadlift|Sumo_Deadlift_with_Bands|Sumo_Deadlift_with_Chains|Superman|Supine_Chest_Throw|Supine_One-Arm_Overhead_Throw|Supine_Two-Arm_Overhead_Throw|Suspended_Fallout|Suspended_Push-Up|Suspended_Reverse_Crunch|Suspended_Row|Suspended_Split_Squat|Svend_Press|T-Bar_Row_with_Handle|Tate_Press|The_Straddle|Thigh_Abductor|Thigh_Adductor|Tire_Flip|Toe_Touchers|Torso_Rotation|Trail_Running_Walking|Trap_Bar_Deadlift|Tricep_Dumbbell_Kickback|Tricep_Side_Stretch|Triceps_Overhead_Extension_with_Rope|Triceps_Pushdown|Triceps_Pushdown_-_Rope_Attachment|Triceps_Pushdown_-_V-Bar_Attachment|Triceps_Stretch|Tuck_Crunch|Two-Arm_Dumbbell_Preacher_Curl|Two-Arm_Kettlebell_Clean|Two-Arm_Kettlebell_Jerk|Two-Arm_Kettlebell_Military_Press|Two-Arm_Kettlebell_Row|Underhand_Cable_Pulldowns|Upper_Back-Leg_Grab|Upper_Back_Stretch|Upright_Barbell_Row|Upright_Cable_Row|Upright_Row_-_With_Bands|Upward_Stretch|V-Bar_Pulldown|V-Bar_Pullup|Vertical_Swing|Walking_Treadmill|Weighted_Ball_Hyperextension|Weighted_Ball_Side_Bend|Weighted_Bench_Dip|Weighted_Crunches|Weighted_Jump_Squat|Weighted_Pull_Ups|Weighted_Sissy_Squat|Weighted_Sit-Ups_-_With_Bands|Weighted_Squat|Wide-Grip_Barbell_Bench_Press|Wide-Grip_Decline_Barbell_Bench_Press|Wide-Grip_Decline_Barbell_Pullover|Wide-Grip_Lat_Pulldown|Wide-Grip_Pulldown_Behind_The_Neck|Wide-Grip_Rear_Pull-Up|Wide-Grip_Standing_Barbell_Curl|Wide_Stance_Barbell_Squat|Wide_Stance_Stiff_Legs|Wind_Sprints|Windmills|Worlds_Greatest_Stretch|Wrist_Circles|Wrist_Roller|Wrist_Rotations_with_Straight_Bar|Yoke_Walk|Zercher_Squats|Zottman_Curl|Zottman_Preacher_Curl'.split('|');
+const GH='https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
+const imgOf=(e,i)=>LOCAL.has(e.id)?'img/'+e.id+'-'+i+'.jpg':e.ref?GH+e.ref+'/'+i+'.jpg':'';
+const thumb=e=>{const s=imgOf(e,0);return s?`<img class="th" src="${s}" alt="" loading="lazy">`:`<span class="th none">${esc((e.name.trim()[0]||'?').toUpperCase())}</span>`};
+const yt=e=>'https://www.youtube.com/results?search_query='+encodeURIComponent(e.name.replace(/\(.*?\)/g,'').trim()+' exercise proper form');
+function demoHtml(e){const a=imgOf(e,0),b=imgOf(e,1),c=CUES[e.id];
+ return (a?`<div class="demo" aria-label="Minh hoạ động tác"><img src="${a}" alt="${esc(e.name)} — tư thế đầu"><img src="${b}" alt="${esc(e.name)} — tư thế cuối"></div>`
+  :`<div class="demo nodemo"><p>Chưa có hình minh hoạ cho bài này.</p><button class="btn sm" data-act="ref-pick" data-id="${e.id}">Chọn hình minh hoạ</button></div>`)+
+ (c?`<ul class="cues">${c.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'')+
+ `<a class="btn block" href="${yt(e)}" target="_blank" rel="noopener">Xem video hướng dẫn trên YouTube</a>`}
+function refList(){const toks=norm(S.rq).split(/\s+/).filter(Boolean);
+ const l=REFS.filter(r=>{const n=norm(r.replace(/_/g,' '));return toks.every(t=>n.includes(t))}).slice(0,40);
+ return l.map(r=>`<button data-act="ref-set" data-r="${r}"><span class="pi"><img class="th" src="${GH+r}/0.jpg" alt="" loading="lazy"><span>${esc(r.replace(/_/g,' '))}</span></span></button>`).join('')||'<p class="empty">Không tìm thấy — thử từ khoá tiếng Anh khác.</p>'}
+const autoRef=name=>{const n=norm(name.replace(/\(.*?\)/g,''));return REFS.find(r=>norm(r.replace(/_/g,' '))===n)||null};
+
+/* ---------- line chart (tap/drag to inspect) ---------- */
+function chart(el,pts,unit){if(!el||!pts.length)return;let hi=-1,X=null;
+ const draw=()=>{const W=el.clientWidth,H=el.clientHeight;if(!W||!H)return;const P={l:44,r:16,t:18,b:26},n=pts.length;
+  let x0=pts[0].x,x1=pts[n-1].x;if(x1===x0){x0-=864e5;x1+=864e5}
+  let y0=Infinity,y1=-Infinity;pts.forEach(p=>{y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)});const pd=(y1-y0)*.2||Math.max(1,y1*.05);y0=Math.max(0,y0-pd);y1+=pd;
+  X=x=>P.l+(x-x0)/(x1-x0)*(W-P.l-P.r);const Y=y=>P.t+(1-(y-y0)/(y1-y0))*(H-P.t-P.b);
+  const ticks=[0,1,2,3].map(k=>y0+(y1-y0)*k/3),dec=(y1-y0)<6?1:0;
+  const line=pts.map((p,i)=>(i?'L':'M')+X(p.x).toFixed(1)+' '+Y(p.y).toFixed(1)).join('');
+  const area=line+'L'+X(pts[n-1].x).toFixed(1)+' '+(H-P.b)+'L'+X(pts[0].x).toFixed(1)+' '+(H-P.b)+'Z';
+  const s=pts[hi>=0?hi:n-1],sx=X(s.x),sy=Y(s.y),lab=fmtNum(s.y)+' '+unit+' · '+dm(s.x),lw=lab.length*7.2+18;
+  const lx=Math.min(Math.max(sx-lw/2,P.l),W-P.r-lw),ly=sy-38<2?sy+12:sy-38,gid='g'+el.id;
+  el.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Biểu đồ tiến độ"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--red)" stop-opacity=".3"/><stop offset="1" stop-color="var(--red)" stop-opacity="0"/></linearGradient></defs>
+  ${ticks.map(t=>`<line x1="${P.l}" x2="${W-P.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--line)"/><text x="${P.l-8}" y="${Y(t)+4}" text-anchor="end" font-size="12" fill="var(--mute)">${fmtNum(t,dec)}</text>`).join('')}
+  <text x="${P.l}" y="${H-7}" font-size="12" fill="var(--mute)">${dm(pts[0].x)}</text><text x="${W-P.r}" y="${H-7}" font-size="12" fill="var(--mute)" text-anchor="end">${dm(pts[n-1].x)}</text>
+  <path d="${area}" fill="url(#${gid})"/><path d="${line}" fill="none" stroke="var(--red)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+  ${n<=40?pts.map(p=>`<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="3.2" fill="var(--card)" stroke="var(--red)" stroke-width="2"/>`).join(''):''}
+  <line x1="${sx}" x2="${sx}" y1="${P.t}" y2="${H-P.b}" stroke="var(--ink)" stroke-opacity=".25" stroke-dasharray="3 3"/><circle cx="${sx}" cy="${sy}" r="6" fill="var(--red)" stroke="var(--card)" stroke-width="2.5"/>
+  <rect x="${lx}" y="${ly}" width="${lw}" height="26" rx="8" fill="var(--ink)"/><text x="${lx+lw/2}" y="${ly+17.5}" text-anchor="middle" font-size="13" font-weight="600" fill="var(--bg)">${lab}</text></svg>`};
+ const pick=e=>{if(!X)return;const r=el.getBoundingClientRect(),x=e.clientX-r.left;let bi=0,bd=1e9;pts.forEach((p,i)=>{const d=Math.abs(X(p.x)-x);if(d<bd){bd=d;bi=i}});if(bi!==hi){hi=bi;draw()}};
+ el.onpointerdown=pick;el.onpointermove=e=>{if(e.buttons||e.pointerType==='mouse')pick(e)};
+ draw();try{new ResizeObserver(draw).observe(el)}catch(e){}}
+
+/* ---------- views: home ---------- */
+function vHome(){
+ const now=new Date(),today=now.getDay(),mon=startOfWeek(now);
+ const tr=new Set(D.workouts.map(w=>dayKey(w.start)));
+ const wk=D.workouts.filter(w=>w.start>=mon.getTime());
+ const plates=[...Array(7)].map((_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return `<div class="pl ${tr.has(dayKey(d))?'on':''} ${dayKey(d)===dayKey(now)?'today':''}"><i></i><span>${DAY[d.getDay()]}</span></div>`}).join('');
+ const todays=D.routines.filter(r=>(r.days||[]).includes(today));
+ const others=D.routines.filter(r=>!(r.days||[]).includes(today));
+ let hint='';
+ if(embed)hint=`<div class="hint"><p>Bản xem thử trong Claude: dữ liệu ở đây có thể không được giữ lại. Dùng thật thì cài bản chính lên iPhone.</p></div>`;
+ else if(!standalone&&!D.settings.hintOff)hint=`<div class="hint"><p>Dùng như app: trong Safari bấm nút <b>Chia sẻ</b> → <b>Thêm vào MH chính</b>, rồi luôn mở từ biểu tượng đó (dữ liệu của tab Safari và của app là tách riêng).</p><button class="icon" data-act="hint-off" aria-label="Ẩn">${ICON.x}</button></div>`;
+ const tr0=todays[0];
+ const hero=tr0?`<div class="hero"><small>Hôm nay · ${DAYF[today]}</small><h3>${esc(tr0.name)}</h3><p>${tr0.items.map(it=>esc(exOf(it.exId).name.replace(/\s*\(.*\)/,''))).join(' · ')}</p><button class="btn red block" data-act="start-routine" data-id="${tr0.id}">Bắt đầu ${esc(tr0.name)}</button><button class="btn alt block" data-act="start-empty">Buổi trống</button></div>`
+ :`<div class="hero"><small>Hôm nay · ${DAYF[today]}</small><h3>Ngày tự do</h3><p>Không có routine nào xếp cho hôm nay.</p><button class="btn red block" data-act="start-empty">Bắt đầu buổi trống</button></div>`;
+ const rcard=r=>`<div class="card rc"><div class="rc-h"><b>${esc(r.name)}</b><span class="days">${(r.days||[]).slice().sort((a,b)=>((a+6)%7)-((b+6)%7)).map(d=>DAY[d]).join(' ')}</span><button class="icon" data-act="r-edit" data-id="${r.id}" aria-label="Sửa routine">${ICON.dots}</button></div><p>${r.items.length} bài · ${r.items.reduce((a,i)=>a+i.sets,0)} set — ${r.items.slice(0,4).map(it=>esc(exOf(it.exId).name.replace(/\s*\(.*\)/,''))).join(', ')}${r.items.length>4?'…':''}</p><button class="btn block" data-act="start-routine" data-id="${r.id}">Bắt đầu</button></div>`;
+ return hdr(multi()?curP().name:'GGym',avBtn(),`<button class="icon" data-act="settings" aria-label="Cài đặt">${ICON.cog}</button>`)+hint+
+ `<section class="week"><div class="plates">${plates}</div><div class="wsum"><div><b>${wk.length}</b>buổi tuần này</div><div><b>${fmtVol(wk.reduce((a,w)=>a+wVol(w),0))}</b>kg volume</div><div><b>${durS(wk.reduce((a,w)=>a+(w.end-w.start),0))}</b>thời gian</div></div></section>`+
+ hero+`<h2>Routine</h2>`+(todays.slice(1).concat(others).map(rcard).join('')||'')+
+ `<button class="btn ghost block" data-act="r-new">+ Routine mới</button>`;
+}
+
+/* ---------- views: workout ---------- */
+const blank=()=>({w:'',r:'',done:false,t:'n'});
+const prevOf=e=>{const a=D.active;return((exHistory(e.exId,a.editId,a.start)[0])||{}).sets||[]};
+function wkTotals(){let v=0,n=0;D.active.exercises.forEach(e=>e.sets.forEach(s=>{if(s.done&&s.t!=='w'){v+=num(s.w)*num(s.r);n++}}));return{v,n}}
+function vWorkout(){
+ const a=D.active,t=wkTotals();
+ const exs=a.exercises.map((e,i)=>{const prev=prevOf(e),ex=exOf(e.exId);let n=0;
+  const rows=e.sets.map((s,j)=>{const p=prev[j];const lab=s.t==='w'?'K':String(++n);
+   return `<div class="row ${s.done?'done':''}"><button class="setno ${s.t==='w'?'wu':''}" data-act="setmenu" data-i="${i}" data-j="${j}" aria-label="Tuỳ chọn set">${lab}</button><span class="prev">${p?fx(p.w)+' × '+p.r:'—'}</span><input data-f="w" data-i="${i}" data-j="${j}" inputmode="decimal" autocomplete="off" value="${esc(s.w)}" placeholder="${p?fx(p.w):'kg'}" aria-label="kg"><input data-f="r" data-i="${i}" data-j="${j}" inputmode="numeric" autocomplete="off" value="${esc(s.r)}" placeholder="${p?p.r:'reps'}" aria-label="reps"><button class="chk" data-act="check" data-i="${i}" data-j="${j}" aria-label="Xong set">${ICON.check}</button></div>`}).join('');
+  const rest=D.restBy[e.exId]!=null?D.restBy[e.exId]:D.settings.rest;
+  return `<section class="card ex"><div class="ex-h"><button class="exth" data-act="exinfo" data-id="${e.exId}" aria-label="Xem cách tập">${thumb(ex)}</button><button class="ex-name" data-act="exinfo" data-id="${e.exId}">${esc(ex.name)}</button><button class="icon" data-act="exmenu" data-i="${i}" aria-label="Tuỳ chọn bài tập">${ICON.dots}</button></div><div class="ex-sub">${esc(ex.group)} · Nghỉ ${rest?fmtClock(rest):'tắt'}</div><div class="row hd"><span>Set</span><span>Lần trước</span><span>kg</span><span>Reps</span><span></span></div>${rows}<button class="btn ghost block" data-act="addset" data-i="${i}">+ Thêm set</button></section>`}).join('');
+ return `<header class="top wk"><button class="icon" data-act="minimize" aria-label="Thu nhỏ">${ICON.down}</button><div class="wk-t"><b class="elapsed">0:00</b><small>${a.editId?'Đang sửa buổi cũ':multi()?esc(curP().name):'Thời gian'}</small></div><button class="btn red sm" data-act="finish">${a.editId?'Lưu':'Kết thúc'}</button></header>
+ <input class="wk-name" data-f="wname" value="${esc(a.name)}" aria-label="Tên buổi tập" autocomplete="off">
+ <div class="wk-stats"><span><b id="wk-vol">${fmtVol(t.v)}</b> kg volume</span><span><b id="wk-sets">${t.n}</b> set xong</span></div>
+ ${exs||'<p class="empty">Chưa có bài tập nào. Thêm bài đầu tiên nhé.</p>'}
+ <button class="btn red block" data-act="addex">+ Thêm bài tập</button>
+ <button class="btn block danger" data-act="discard" style="background:none">${a.editId?'Bỏ thay đổi':'Huỷ buổi tập'}</button>`;
+}
+function updWk(){const t=wkTotals(),v=$('#wk-vol'),n=$('#wk-sets');if(v)v.textContent=fmtVol(t.v);if(n)n.textContent=t.n}
+
+/* ---------- views: history ---------- */
+function vHistory(){
+ const ws=D.workouts,now=new Date(),tr=new Set(ws.map(w=>dayKey(w.start)));
+ const st=startOfWeek(now);st.setDate(st.getDate()-7*15);let cells='';
+ for(let i=0;i<112;i++){const d=new Date(st);d.setDate(st.getDate()+i);cells+=`<i class="${tr.has(dayKey(d))?'on':''}${d>now?' fu':''}"></i>`}
+ const m30=ws.filter(w=>w.start>Date.now()-30*864e5).length;
+ const W7=7*864e5;let b=startOfWeek(now).getTime()+W7,a=b-W7,streak=0;const has=(x,y)=>ws.some(w=>w.start>=x&&w.start<y);
+ if(!has(a,b)){b=a;a-=W7}while(has(a,b)){streak++;b=a;a-=W7}
+ let list='',mon='';
+ for(const w of ws){const d=new Date(w.start),k=d.getFullYear()+'-'+d.getMonth();if(k!==mon){mon=k;list+=`<p class="mon">Tháng ${d.getMonth()+1}, ${d.getFullYear()}</p>`}
+  const prs=(w.prs||[]).length;
+  list+=`<div class="card wc" data-act="wopen" data-id="${w.id}" role="button" tabindex="0"><div class="wc-h"><b>${esc(w.name)}</b><span>${fmtDate(w.start)} · ${hm(w.start)}</span></div><div class="wc-m"><span>${fmtMin(w.end-w.start)}</span><span>${fmtVol(wVol(w))} kg</span><span>${wSets(w)} set</span>${prs?`<span class="pr">${prs} kỷ lục</span>`:''}</div><ul>${w.exercises.slice(0,5).map(e=>{const bb=best(e.sets).bs;return `<li><span>${e.sets.filter(s=>s.t!=='w').length} × ${esc(exOf(e.exId).name)}</span><small>${bb?fx(bb.w)+' kg × '+bb.r:''}</small></li>`}).join('')}${w.exercises.length>5?`<li><small>+${w.exercises.length-5} bài khác</small></li>`:''}</ul></div>`}
+ return hdr('Lịch sử',avBtn())+`<div class="card"><div class="heat" aria-label="16 tuần gần nhất">${cells}</div></div><div class="tiles t3" style="margin-top:8px"><div><b>${ws.length}</b><span>tổng số buổi</span></div><div><b>${m30}</b><span>buổi / 30 ngày</span></div><div><b>${streak}</b><span>tuần liên tiếp</span></div></div>`+
+ (list||`<p class="empty">Chưa có buổi tập nào.<br>Bắt đầu ở tab Tập, hoặc nhập lịch sử từ Hevy trong Cài đặt.</p>`);
+}
+
+/* ---------- views: exercises ---------- */
+function usage(){const m={};for(const w of D.workouts)for(const e of w.exercises){const u=m[e.exId]||(m[e.exId]={n:0,mw:0,last:0});u.n++;u.last=Math.max(u.last,w.start);for(const s of e.sets)if(s.t!=='w')u.mw=Math.max(u.mw,+s.w||0)}return m}
+function exListHtml(){const q=norm(S.q),u=usage();
+ const list=D.exercises.filter(e=>(!S.grp||e.group===S.grp)&&(!q||norm(e.name).includes(q)||norm(e.group).includes(q)))
+  .sort((a,b)=>((u[b.id]||{}).n||0)-((u[a.id]||{}).n||0)||a.name.localeCompare(b.name));
+ return list.map(e=>{const x=u[e.id];return `<div class="li" data-act="exopen" data-id="${e.id}" role="button" tabindex="0"><div class="lim">${thumb(e)}<div><b>${esc(e.name)}</b><small>${esc(e.group)}${x?' · '+x.n+' buổi':''}</small></div></div><span class="pv">${x&&x.mw?fx(x.mw)+' kg':''}</span></div>`}).join('')||'<p class="empty">Không tìm thấy bài tập.</p>'}
+function vExList(){return hdr('Bài tập',avBtn(),`<button class="icon" data-act="newex" aria-label="Bài tập mới">+</button>`)+
+ `<input class="search" type="search" data-f="exq" value="${esc(S.q)}" placeholder="Tìm bài tập…" autocomplete="off"><div class="chips scroll">${['Tất cả'].concat(GROUPS).map(g=>`<button class="chip ${(S.grp||'Tất cả')===g?'on':''}" data-act="grp" data-g="${g}">${g}</button>`).join('')}</div><div id="exlist">${exListHtml()}</div>`}
+const MET={e1:{l:'1RM',f:b=>b.e1,u:'kg'},mw:{l:'Tạ max',f:b=>b.mw,u:'kg'},tv:{l:'Volume',f:b=>b.tv,u:'kg'},mr:{l:'Reps',f:b=>b.mr,u:'reps'}};
+const sessHtml=x=>`<div class="sess"><b>${fmtDate(x.w.start)} · ${esc(x.w.name)}</b><p>${x.sets.map(s=>`${s.t==='w'?'<span class="wu">K</span> ':''}${fx(s.w)}×${s.r}`).join('  ·  ')}</p></div>`;
+function vExDetail(){
+ const e=exOf(S.exId),h=exHistory(e.id),all=h.flatMap(x=>x.sets),b=best(all);
+ if(!S.met)S.met=b.mw>0||!all.length?'e1':'mr';
+ const recs=[1,2,3,5,8,10,12,15].map(r=>[r,Math.max(0,...all.filter(s=>s.t!=='w'&&+s.r>=r).map(s=>+s.w||0))]).filter(x=>x[1]>0);
+ return hdr(e.name,`<button class="icon" data-act="exback" aria-label="Quay lại">${ICON.back}</button>`,`<button class="icon" data-act="exedit" aria-label="Sửa bài tập">${ICON.dots}</button>`,true)+
+ `<p class="mute small" style="margin:-6px 0 12px 50px">${esc(e.group)}</p>${demoHtml(e)}<div style="height:14px"></div>
+ <div class="tiles"><div><b>${b.mw?fx(b.mw):'—'}</b><span>Tạ nặng nhất (kg)</span></div><div><b>${b.e1&&b.mw?fx(r1(b.e1)):'—'}</b><span>1RM ước tính (kg)</span></div><div><b>${b.bs?fx(b.bs.w)+'×'+b.bs.r:'—'}</b><span>Set tốt nhất</span></div><div><b>${h.length}</b><span>Số buổi đã tập</span></div></div>
+ <div class="seg">${Object.keys(MET).map(k=>`<button class="${S.met===k?'on':''}" data-act="met" data-k="${k}">${MET[k].l}</button>`).join('')}</div>
+ ${h.length>=2?`<div class="fig" id="exchart"></div>`:`<p class="empty card">Cần ít nhất 2 buổi để vẽ biểu đồ tiến bộ.</p>`}
+ ${recs.length?`<h2>Kỷ lục theo số reps</h2><p class="mute small" style="margin:0 0 8px">Mức tạ nặng nhất bạn đã làm được với ít nhất ngần ấy reps.</p><table class="rec">${recs.map(([r,w])=>`<tr><td>${r} rep${r>1?'s':''}</td><td>${fx(w)} kg</td></tr>`).join('')}</table>`:''}
+ <h2>Lịch sử</h2>${h.map(sessHtml).join('')||'<p class="empty">Chưa tập bài này.</p>'}`;
+}
+
+/* ---------- views: body ---------- */
+function vBody(){
+ const s=D.body.slice().sort((a,b)=>a.d-b.d),last=s[s.length-1],first=s[0];
+ const ago=Date.now()-30*864e5;let base=first;for(const x of s)if(x.d<=ago)base=x;
+ const dlt=v=>(v>0?'+':v<0?'−':'±')+fx(Math.abs(r1(v)));
+ const hasBf=s.some(x=>x.bf);if(!hasBf)S.bm='kg';
+ const n=S.bm==='kg'?s.length:s.filter(x=>x.bf).length;
+ return hdr('Cơ thể',avBtn(),`<button class="icon" data-act="settings" aria-label="Cài đặt">${ICON.cog}</button>`)+
+ `<div class="card"><div class="bform"><label>Cân nặng (kg)<input id="bw" inputmode="decimal" placeholder="${last?fx(last.kg):'67'}" autocomplete="off"></label><label>% mỡ (tuỳ chọn)<input id="bf" inputmode="decimal" placeholder="${last&&last.bf?fx(last.bf):'—'}" autocomplete="off"></label><label class="full">Ngày<input id="bd" type="date" value="${ymd(new Date())}"></label><button class="btn red" data-act="body-add">Ghi số đo</button></div></div>`+
+ (last?`<div class="tiles t3" style="margin-top:12px"><div><b>${fx(last.kg)}</b><span>kg hiện tại</span></div><div><b>${dlt(last.kg-base.kg)}</b><span>kg / 30 ngày</span></div><div><b>${dlt(last.kg-first.kg)}</b><span>kg từ lần đầu</span></div></div>`:'')+
+ (hasBf?`<div class="seg"><button class="${S.bm==='kg'?'on':''}" data-act="bm" data-k="kg">Cân nặng</button><button class="${S.bm==='bf'?'on':''}" data-act="bm" data-k="bf">% mỡ</button></div>`:'<div style="height:16px"></div>')+
+ (n>=2?`<div class="fig" id="bodychart"></div>`:'')+
+ `<h2>Các lần đo</h2>`+(s.slice().reverse().map(x=>`<div class="brow" data-act="body-open" data-id="${x.id}" role="button" tabindex="0"><span>${fmtDate(x.d)}</span><small>${x.bf?fx(x.bf)+' % mỡ':''}</small><b>${fx(x.kg)} kg</b></div>`).join('')||'<p class="empty">Chưa có số đo nào.</p>');
+}
+
+/* ---------- views: routine editor ---------- */
+function vRoutine(){const r=S.draft;
+ return hdr(r.id?'Sửa routine':'Routine mới',`<button class="link" data-act="r-cancel">Huỷ</button>`,`<button class="link strong" data-act="r-save">Lưu</button>`,true)+
+ `<input class="field big" data-f="rname" value="${esc(r.name)}" placeholder="Tên routine, ví dụ: Push" autocomplete="off">
+ <p class="lbl">Ngày tập trong tuần</p><div class="chips">${[1,2,3,4,5,6,0].map(d=>`<button class="chip ${r.days.includes(d)?'on':''}" data-act="r-day" data-d="${d}">${DAY[d]}</button>`).join('')}</div>
+ <p class="lbl">Bài tập</p>${r.items.map((it,i)=>`<div class="card ri"><div class="ri-n"><b>${esc(exOf(it.exId).name)}</b><small>${esc(exOf(it.exId).group)}</small></div><div class="step"><button data-act="r-sets" data-i="${i}" data-s="-1" aria-label="Bớt set">−</button><span>${it.sets} set</span><button data-act="r-sets" data-i="${i}" data-s="1" aria-label="Thêm set">+</button></div><div class="ri-a"><button class="icon" data-act="r-move" data-i="${i}" data-d="-1" ${i?'':'disabled'} aria-label="Lên">↑</button><button class="icon" data-act="r-move" data-i="${i}" data-d="1" ${i<r.items.length-1?'':'disabled'} aria-label="Xuống">↓</button><button class="icon danger" data-act="r-del" data-i="${i}" aria-label="Xoá">${ICON.x}</button></div></div>`).join('')||'<p class="empty card">Chưa có bài tập.</p>'}
+ <button class="btn red block" data-act="r-add">+ Thêm bài tập</button>${r.id?`<button class="btn block danger" style="background:none" data-act="r-remove">Xoá routine</button>`:''}`}
+
+/* ---------- sheet / toast ---------- */
+function sheet(html,cls=''){const s=$('#sheet');s.innerHTML=`<div class="bd" data-act="close"></div><div class="panel ${cls}" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div>`;s.classList.add('open')}
+function closeSheet(){const s=$('#sheet');s.classList.remove('open');s.innerHTML=''}
+function confirmSheet(msg,ok,fn){S.cf=fn;sheet(`<p class="cf">${msg}</p><button class="btn red block" data-act="cf-ok">${ok}</button><button class="btn block" data-act="close">Không</button>`)}
+let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2600)}
+
+/* ---------- picker ---------- */
+function pickList(){const q=norm(S.pq),u=usage();const ok=e=>!q||norm(e.name).includes(q)||norm(e.group).includes(q);
+ const item=e=>`<button data-act="pick" data-id="${e.id}"><span class="pi">${thumb(e)}<span>${esc(e.name)}</span></span><small>${esc(e.group)}</small></button>`;
+ let h='';if(!q){const rec=D.exercises.filter(e=>u[e.id]).sort((a,b)=>u[b.id].last-u[a.id].last).slice(0,6);if(rec.length)h+=`<p class="pg">Gần đây</p>`+rec.map(item).join('')}
+ for(const g of GROUPS){const l=D.exercises.filter(e=>e.group===g&&ok(e)).sort((a,b)=>a.name.localeCompare(b.name));if(l.length)h+=`<p class="pg">${g}</p>`+l.map(item).join('')}
+ return h||'<p class="empty">Không thấy — tạo bài tập mới bên dưới.</p>'}
+function openPicker(cb,title='Thêm bài tập'){S.pick=cb;S.pq='';sheet(`<h3>${title}</h3><input class="search" type="search" data-f="pickq" placeholder="Tìm bài tập…" autocomplete="off"><div id="picklist" class="plist">${pickList()}</div><button class="btn ghost block" data-act="newex" data-p="1">+ Tạo bài tập mới</button>`,'tall')}
+function exSheet(e,fromPick){S.nxg=e?e.group:'Khác';
+ sheet(`<h3>${e?'Sửa bài tập':'Bài tập mới'}</h3><input id="nx-name" class="field" value="${e?esc(e.name):''}" placeholder="Tên, ví dụ: Cable Lateral Raise" autocomplete="off"><p class="lbl">Nhóm cơ</p><div class="chips" id="nx-g">${GROUPS.map(g=>`<button class="chip ${g===S.nxg?'on':''}" data-act="nxg" data-g="${g}">${g}</button>`).join('')}</div><button class="btn red block" data-act="nx-save" data-id="${e?e.id:''}" data-p="${fromPick?1:''}">Lưu</button>${e&&!LOCAL.has(e.id)?`<button class="btn block" data-act="ref-pick" data-id="${e.id}">${e.ref?'Đổi':'Chọn'} hình minh hoạ</button>`:''}${e?`<button class="btn block danger" style="background:none" data-act="ex-remove" data-id="${e.id}">Xoá bài tập</button>`:''}`)}
+
+/* ---------- workout actions ---------- */
+function begin(o){const go=()=>{D.active=Object.assign({id:uid(),start:Date.now(),restEnd:0,restDur:0,name:'Buổi tập',exercises:[]},o);save();S.view='workout';closeSheet();render();scrollTo(0,0)};
+ if(D.active)confirmSheet('Đang có một buổi tập dở. Bỏ buổi đó và bắt đầu buổi mới?','Bỏ và bắt đầu mới',go);else go()}
+function partOfDay(){const h=new Date().getHours();return h<11?'sáng':h<14?'trưa':h<18?'chiều':'tối'}
+function startRest(sec){if(!sec)return;const a=D.active;a.restDur=sec;a.restEnd=Date.now()+sec*1000;restTick()}
+function doFinish(){
+ const a=D.active;
+ const w={id:a.editId||uid(),u:Date.now(),name:(a.name||'').trim()||'Buổi tập',start:a.start,end:a.editId?a.end:Date.now(),routineId:a.routineId||null,
+  exercises:a.exercises.map(e=>({exId:e.exId,sets:e.sets.filter(s=>s.done).map(s=>({w:num(s.w),r:Math.round(num(s.r)),t:s.t==='w'?'w':'n'}))})).filter(e=>e.sets.length)};
+ w.prs=computePRs(w);
+ D.workouts=D.workouts.filter(x=>x.id!==w.id);D.workouts.push(w);D.workouts.sort((x,y)=>y.start-x.start);
+ D.active=null;save();S.view=null;S.tab='history';render();scrollTo(0,0);summary(w);
+}
+function summary(w){const prs=w.prs||[];
+ sheet(`<p class="lbl" style="margin-top:4px">Đã lưu buổi tập</p><h3>${esc(w.name)}</h3><div class="tiles t3"><div><b>${durS(w.end-w.start)||'1p'}</b><span>thời gian</span></div><div><b>${fmtVol(wVol(w))}</b><span>kg volume</span></div><div><b>${wSets(w)}</b><span>set</span></div></div>
+ ${prs.length?`<p class="lbl">Kỷ lục mới · ${prs.length}</p><ul class="prs">${prs.map(p=>`<li><i class="medal"></i><span>${esc(exOf(p.exId).name)}</span><small>${p.k}</small><b>${p.v}</b></li>`).join('')}</ul>`:`<p class="mute">Không có kỷ lục mới lần này — đều tay là được.</p>`}
+ ${w.routineId?'':`<button class="btn block" data-act="w2r" data-id="${w.id}">Lưu thành routine</button>`}<button class="btn red block" data-act="close">Xong</button>`)}
+function wDetail(w){
+ sheet(`<h3>${esc(w.name)}</h3><p class="mute" style="margin-top:-6px">${DAYF[new Date(w.start).getDay()]}, ${dm(w.start)}/${new Date(w.start).getFullYear()} · ${hm(w.start)} · ${fmtMin(w.end-w.start)} · ${fmtVol(wVol(w))} kg</p>
+ ${(w.prs||[]).length?`<ul class="prs">${w.prs.map(p=>`<li><i class="medal"></i><span>${esc(exOf(p.exId).name)}</span><small>${p.k}</small><b>${p.v}</b></li>`).join('')}</ul>`:''}
+ ${w.exercises.map(e=>{let n=0;return `<div class="dx"><b>${esc(exOf(e.exId).name)}</b><ol>${e.sets.map(s=>`<li><span class="sn ${s.t==='w'?'wu':''}">${s.t==='w'?'K':++n}</span>${fx(s.w)} kg × ${s.r}</li>`).join('')}</ol></div>`}).join('')}
+ <div class="row3"><button class="btn" data-act="wedit" data-id="${w.id}">Sửa</button><button class="btn" data-act="wrepeat" data-id="${w.id}">Tập lại</button><button class="btn danger" data-act="wdel" data-id="${w.id}">Xoá</button></div>`,'tall')}
+const findW=id=>D.workouts.find(w=>w.id===id);
+
+/* ---------- import / export ---------- */
+async function exportData(){
+ const name='ggym-'+(norm(curP().name).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'backup')+'-'+ymd(new Date())+'.json',txt=JSON.stringify(stripD(D));
+ let file=null;try{file=new File([txt],name,{type:'application/json'})}catch(e){}
+ try{if(file&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});toast('Đã xuất bản sao lưu');return}}catch(e){if(e&&e.name==='AbortError')return}
+ try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();a.remove();toast('Đã tải file sao lưu');return}catch(e){}
+ try{await navigator.clipboard.writeText(txt);toast('Đã chép dữ liệu vào clipboard')}catch(e){toast('Thiết bị không cho xuất file')}}
+function importJSON(txt){let x;try{x=JSON.parse(txt)}catch(e){return toast('File không phải JSON hợp lệ')}
+ if(!x||!Array.isArray(x.workouts)||!Array.isArray(x.exercises))return toast('Không phải bản sao lưu của GGym');
+ confirmSheet(`Thay toàn bộ dữ liệu hiện tại bằng bản sao lưu này (${x.workouts.length} buổi tập, ${(x.body||[]).length} lần đo)? Dữ liệu đang có trên máy sẽ bị ghi đè.`,'Khôi phục',()=>{const K=['workouts','body','routines','exercises'],t=Date.now(),keep=new Set(K.flatMap(k=>(x[k]||[]).map(i=>i.id))),del=Object.assign({},D.del,x.del||{}),sy=D.sync;K.forEach(k=>D[k].forEach(i=>{if(!keep.has(i.id))del[i.id]=t}));D=fix(x);K.forEach(k=>D[k].forEach(i=>{i.u=Math.max(i.u||0,t);delete del[i.id]}));D.del=del;D.sync=sy;EXM=null;save();S.view=null;S.tab='home';render();toast('Đã khôi phục')})}
+function parseCSV(t){const rows=[];let row=[],f='',q=false;for(let i=0;i<t.length;i++){const c=t[i];
+ if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+ else if(c==='"')q=true;else if(c===','){row.push(f);f=''}
+ else if(c==='\n'||c==='\r'){if(c==='\r'&&t[i+1]==='\n')i++;row.push(f);rows.push(row);row=[];f=''}else f+=c}
+ if(f!==''||row.length){row.push(f);rows.push(row)}return rows}
+function parseDate(s){s=String(s||'').trim();const m=s.match(/(\d{1,2})\s+([A-Za-z]{3})[a-z]*\.?,?\s+(\d{4}),?\s+(\d{1,2}):(\d{2})/);
+ if(m){const mo='janfebmaraprmayjunjulaugsepoctnovdec'.indexOf(m[2].toLowerCase())/3;if(mo>=0)return new Date(+m[3],mo,+m[1],+m[4],+m[5]).getTime()}
+ const t=Date.parse(s);return isNaN(t)?null:t}
+function importHevy(txt){
+ const rows=parseCSV(txt.replace(/^\uFEFF/,'')).filter(r=>r.length>1);if(rows.length<2)return toast('File CSV trống');
+ const h=rows[0].map(s=>s.trim().toLowerCase()),ix=k=>h.indexOf(k);
+ const c={title:ix('title'),start:ix('start_time'),end:ix('end_time'),ex:ix('exercise_title'),type:ix('set_type'),kg:ix('weight_kg'),lb:ix('weight_lbs'),reps:ix('reps')};
+ if(c.start<0||c.ex<0||c.reps<0)return toast('Không nhận ra định dạng CSV của Hevy');
+ const map=new Map();
+ for(const r of rows.slice(1)){const st=parseDate(r[c.start]);if(!st)continue;const title=(c.title>=0?r[c.title]:'')||'Buổi tập';const key=st+'|'+title;
+  let w=map.get(key);if(!w){const en=c.end>=0?parseDate(r[c.end]):null;w={start:st,end:en&&en>st?en:st+3600e3,name:title.trim(),ex:[]};map.set(key,w)}
+  const reps=parseInt(r[c.reps],10),nm=(r[c.ex]||'').trim();if(!(reps>0)||!nm)continue;
+  let kg=c.kg>=0?num(r[c.kg]):(c.lb>=0?num(r[c.lb])*0.45359237:0);kg=Math.round(kg*100)/100;
+  let e=w.ex.find(x=>x.nm===nm);if(!e){e={nm,sets:[]};w.ex.push(e)}e.sets.push({w:kg,r:reps,t:/warm/i.test(c.type>=0?r[c.type]:'')?'w':'n'})}
+ const have=new Set(D.workouts.map(w=>w.start));const all=[...map.values()].filter(w=>w.ex.length);const fresh=all.filter(w=>!have.has(w.start));
+ if(!fresh.length)return toast(all.length?'Các buổi trong file đã có sẵn':'Không đọc được buổi tập nào');
+ const byName=new Map(D.exercises.map(e=>[norm(e.name),e.id]));const newNames=new Set(fresh.flatMap(w=>w.ex.map(e=>e.nm)).filter(n=>!byName.has(norm(n))));
+ confirmSheet(`Tìm thấy <b>${fresh.length}</b> buổi tập mới${all.length>fresh.length?` (bỏ qua ${all.length-fresh.length} buổi trùng)`:''}${newNames.size?`, kèm ${newNames.size} bài tập chưa có trong danh sách`:''}. Nhập vào?`,'Nhập lịch sử',()=>{
+  const added=[];for(const w of fresh){const ws={id:uid(),u:Date.now(),name:w.name,start:w.start,end:w.end,routineId:null,src:'hevy',exercises:w.ex.map(e=>{let id=byName.get(norm(e.nm));if(!id){id=uid();const nx={id,u:Date.now(),name:e.nm,group:'Khác',custom:true},rf=autoRef(e.nm);if(rf)nx.ref=rf;D.exercises.push(nx);byName.set(norm(e.nm),id)}return{exId:id,sets:e.sets}})};D.workouts.push(ws);added.push(ws)}
+  EXM=null;D.workouts.sort((a,b)=>b.start-a.start);for(const w of D.workouts)w.prs=computePRs(w);save();S.view=null;S.tab='history';render();toast('Đã nhập '+added.length+' buổi tập')})}
+function settingsSheet(){const st=D.settings;
+ sheet(`<h3>Cài đặt${multi()?' · '+esc(curP().name):''}</h3>${multi()?'<p class="mute small" style="margin-top:-6px">Cài đặt, sao lưu và xoá dữ liệu bên dưới chỉ áp dụng cho hồ sơ này.</p>':''}<p class="lbl">Thời gian nghỉ mặc định</p><div class="chips">${[60,90,120,150,180].map(s=>`<button class="chip ${st.rest===s?'on':''}" data-act="defrest" data-s="${s}">${fmtClock(s)}</button>`).join('')}</div>
+ <div class="tg" style="margin-top:12px"><span>Âm báo khi hết giờ nghỉ</span><button class="sw ${st.sound?'on':''}" data-act="tgl" data-k="sound" aria-pressed="${!!st.sound}" aria-label="Âm báo"></button></div>
+ <div class="tg"><span>Giữ màn hình sáng khi đang tập</span><button class="sw ${st.wake?'on':''}" data-act="tgl" data-k="wake" aria-pressed="${!!st.wake}" aria-label="Giữ màn hình sáng"></button></div>
+ ${cloudHtml()}
+ <p class="lbl">Sao lưu</p><p class="mute small" style="margin:0">${getAuth()&&cloudCfg()?'Dữ liệu được đồng bộ lên Supabase; vẫn nên thỉnh thoảng xuất một bản sao lưu.':'Dữ liệu chỉ nằm trên máy này. Thỉnh thoảng xuất một bản sao lưu vào Tệp / iCloud Drive cho chắc.'}</p>
+ <button class="btn block" data-act="export">Xuất dữ liệu (.json)</button>
+ <label class="btn block">Khôi phục từ bản sao lưu<input class="vh" type="file" accept=".json,application/json" data-f="imp-json"></label>
+ <label class="btn block">Nhập lịch sử từ Hevy (.csv)<input class="vh" type="file" accept=".csv,text/csv,text/comma-separated-values" data-f="imp-hevy"></label>
+ <p class="mute small">Trong Hevy: Hồ sơ → Cài đặt → Xuất &amp; nhập dữ liệu → Xuất bài tập (Export workouts), lưu file CSV rồi chọn ở đây.</p>
+ <p class="mute small">${D.workouts.length} buổi tập · ${D.exercises.length} bài tập · ${D.routines.length} routine · ${D.body.length} lần đo${canStore?'':' · ⚠ không ghi được bộ nhớ'}</p>
+ <button class="btn block danger" style="background:none" data-act="wipe">Xoá toàn bộ dữ liệu</button>`,'tall')}
+
+
+
+/* ---------- cloud sync (Supabase) ----------
+   1 dòng / tài khoản trong bảng ggym_docs (doc jsonb + rev). App vẫn offline-first:
+   lưu máy trước, có mạng thì gộp (theo id + thời điểm sửa, có danh sách đã xoá) rồi đẩy lên. */
+const CLOUD0={url:'',key:''}; // điền URL + publishable key để ai cài app cũng có sẵn cấu hình
+const cloudCfg=()=>{let c=null;try{c=JSON.parse(localStorage.getItem('ggym.cloud')||'null')}catch(e){}return(c&&c.url&&c.key)?c:(CLOUD0.url&&CLOUD0.key?CLOUD0:null)};
+const AKEY=()=>'ggym.auth.'+P.cur;
+const getAuth=()=>{try{return JSON.parse(localStorage.getItem(AKEY())||'null')}catch(e){return null}};
+const setAuth=a=>{try{if(a)localStorage.setItem(AKEY(),JSON.stringify(a));else localStorage.removeItem(AKEY())}catch(e){}};
+const stripD=x=>{const o=Object.assign({},x);delete o.sync;return o};
+async function sbFetch(path,opt={},auth=true){const c=cloudCfg();if(!c)throw new Error('Chưa cấu hình Supabase');
+ const h=Object.assign({apikey:c.key,'Content-Type':'application/json'},opt.headers||{});
+ h.Authorization='Bearer '+(auth?await token():c.key);
+ let r;try{r=await fetch(c.url.replace(/\/+$/,'')+path,Object.assign({},opt,{headers:h}))}catch(e){throw new Error('Không kết nối được Supabase')}
+ const txt=await r.text();let j=null;try{j=txt?JSON.parse(txt):null}catch(e){}
+ if(!r.ok){const e=new Error((j&&(j.msg||j.message||j.error_description||j.error))||('HTTP '+r.status));e.status=r.status;e.code=j&&(j.error_code||j.code);throw e}return j}
+function saveSession(j){const a={at:j.access_token,rt:j.refresh_token,exp:Date.now()+(j.expires_in||3600)*1000,uid:j.user&&j.user.id,email:j.user&&j.user.email};setAuth(a);return a}
+async function token(){let a=getAuth();if(!a)throw Object.assign(new Error('Chưa đăng nhập'),{status:401});
+ if(Date.now()>a.exp-60000){let j;try{j=await sbFetch('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:a.rt})},false)}
+  catch(e){if(e.status===400||e.status===401){setAuth(null);throw new Error('Phiên đăng nhập đã hết, hãy đăng nhập lại')}throw e}
+  a=saveSession(j)}return a.at}
+const authMsg=e=>{const m=String(e&&e.message||'');
+ return /invalid login/i.test(m)?'Sai email hoặc mật khẩu':/not confirmed/i.test(m)?'Email chưa được xác nhận — mở hộp thư để xác nhận':/already registered|already exists/i.test(m)?'Email này đã có tài khoản — bấm Đăng nhập':/password/i.test(m)&&/6|short|weak/i.test(m)?'Mật khẩu cần ít nhất 6 ký tự':/rate limit|too many/i.test(m)?'Thử lại sau ít phút (giới hạn gửi email)':m}
+function mergeDocs(L,R){const del=Object.assign({},R.del||{},L.del||{});const lNew=(L.mt||0)>=(R.mt||0);
+ const out=Object.assign({},lNew?R:L,lNew?L:R);
+ for(const k of ['workouts','body','exercises','routines']){const m=new Map();for(const x of (R[k]||[]))m.set(x.id,x);
+  for(const x of (L[k]||[])){const y=m.get(x.id);if(!y||(x.u||0)>=(y.u||0))m.set(x.id,x)}
+  out[k]=[...m.values()].filter(x=>!del[x.id])}
+ if(L.active&&!R.active&&!lNew&&L.active.start>(R.mt||0))out.active=L.active; // buổi đang tập trên máy này mới bắt đầu sau lần sửa cuối ở máy khác
+ out.del=del;out.mt=Math.max(L.mt||0,R.mt||0);delete out.sync;return fix(out)}
+const isSeedRoutine=r=>!r.u&&R0.some(([n,,items])=>n===r.name&&JSON.stringify(items.map(([exId,sets])=>({exId,sets})))===JSON.stringify((r.items||[]).map(i=>({exId:i.exId,sets:i.sets}))));
+const sig=x=>['workouts','body','exercises','routines'].map(k=>(x[k]||[]).map(i=>i.id+':'+(i.u||0)).sort().join(',')).join('|')+'|'+Object.keys(x.del||{}).length+'|'+(x.mt||0);
+let syncing=false,syncT=null;
+function scheduleSync(ms){clearTimeout(syncT);if(cloudCfg()&&getAuth())syncT=setTimeout(()=>sync(),ms==null?4000:ms)}
+function syncText(){const sy=D.sync||{};if(S.syncErr)return 'Lỗi: '+esc(S.syncErr);if(syncing)return 'Đang đồng bộ…';if(!sy.at)return 'Chưa đồng bộ lần nào';
+ return 'Đồng bộ lần cuối '+hm(sy.at)+', '+dm(sy.at)+(sy.dirty?' · còn thay đổi chờ gửi':'')}
+function setSyncSt(){const el=$('#sync-st');if(el)el.innerHTML=syncText()}
+async function sync(manual){
+ if(syncing||!cloudCfg()||!getAuth())return;
+ if(navigator.onLine===false){if(manual)toast('Đang offline — sẽ đồng bộ khi có mạng');return}
+ syncing=true;S.syncErr='';setSyncSt();const pid=P.cur;let pulled=false,ok=false;
+ try{await token();const uid=getAuth().uid;
+  for(let i=0;i<4;i++){
+   const rows=await sbFetch('/rest/v1/ggym_docs?select=doc,rev&user_id=eq.'+uid);if(P.cur!==pid)return;
+   const row=rows&&rows[0],sy=D.sync||{},first=!sy.rev||sy.uid!==uid,seq=editSeq;
+   if(!row){const r=await sbFetch('/rest/v1/ggym_docs?select=rev',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({user_id:uid,doc:stripD(D),rev:1})}).catch(e=>{if(e.status===409)return null;throw e});
+    if(P.cur!==pid)return;if(!r)continue;D.sync={uid,rev:1,at:Date.now(),dirty:editSeq!==seq};saveRaw();ok=true;break}
+   let push=!!sy.dirty&&!first;
+   if(first||row.rev!==sy.rev){const R=fix(row.doc||{});
+    if(first&&R.routines.length)D.routines=D.routines.filter(r=>!isSeedRoutine(r)); // bỏ routine mẫu chưa sửa để không bị trùng
+    D=mergeDocs(D,R);D.sync={uid,rev:row.rev,at:sy.at,dirty:!!sy.dirty};EXM=null;pulled=true;push=sig(D)!==sig(R)}
+   if(!push){D.sync=Object.assign({},D.sync,{uid,rev:row.rev,at:Date.now(),dirty:editSeq!==seq});saveRaw();ok=true;break}
+   const r=await sbFetch('/rest/v1/ggym_docs?user_id=eq.'+uid+'&rev=eq.'+row.rev+'&select=rev',{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({doc:stripD(D),rev:row.rev+1})});
+   if(P.cur!==pid)return;if(!r||!r.length){saveRaw();continue}
+   D.sync={uid,rev:row.rev+1,at:Date.now(),dirty:editSeq!==seq};saveRaw();ok=true;break}
+  if(!ok)throw new Error('Dữ liệu đang thay đổi ở máy khác, thử lại sau');
+  if(pulled){const ae=document.activeElement;if(!(ae&&ae.matches&&ae.matches('input')))render()}
+  if(manual)toast('Đã đồng bộ')}
+ catch(e){S.syncErr=e.message;if(manual)toast('Không đồng bộ được: '+e.message)}
+ finally{syncing=false;setSyncSt();if(P.cur===pid&&D.sync&&D.sync.dirty&&getAuth())scheduleSync(15000)}}
+function cloudHtml(){const c=cloudCfg(),a=getAuth();
+ if(!c||S.cfgEdit)return `<p class="lbl">Đồng bộ đám mây (Supabase)</p><p class="mute small" style="margin:0 0 8px">Supabase → Project Settings → API: dán Project URL và Publishable key (hoặc anon key).</p><input id="cf-url" class="field" value="${c?esc(c.url):''}" placeholder="https://xxxx.supabase.co" autocomplete="off" inputmode="url"><input id="cf-key" class="field" style="margin-top:8px" value="${c?esc(c.key):''}" placeholder="sb_publishable_… hoặc anon key" autocomplete="off"><button class="btn block" data-act="cloud-cfg">Lưu cấu hình</button>`;
+ if(!a)return `<p class="lbl">Đồng bộ đám mây</p><p class="mute small" style="margin:0 0 8px">Đăng nhập để tự sao lưu và dùng trên nhiều máy${multi()?'. Mỗi hồ sơ dùng một tài khoản riêng':''}.</p><input id="au-email" class="field" type="email" placeholder="Email" autocomplete="username" inputmode="email"><input id="au-pass" class="field" style="margin-top:8px" type="password" placeholder="Mật khẩu (ít nhất 6 ký tự)" autocomplete="current-password"><div class="row2"><button class="btn red" data-act="au-in">Đăng nhập</button><button class="btn" data-act="au-up">Tạo tài khoản</button></div><button class="link" data-act="cloud-edit">Đổi cấu hình Supabase</button>`;
+ return `<p class="lbl">Đồng bộ đám mây</p><div class="card" style="margin-top:0"><b>${esc(a.email||'')}</b><p class="mute small" style="margin:2px 0 0" id="sync-st">${syncText()}</p></div><div class="row2"><button class="btn" data-act="sync-now">Đồng bộ ngay</button><button class="btn danger" data-act="au-out">Đăng xuất</button></div>`}
+
+/* ---------- profiles ---------- */
+function profStat(p){const x=p.id===P.cur?D:loadD(p.id);if(!x)return 'Chưa có buổi tập';const n=x.workouts.length,last=x.workouts[0];
+ return (x.active?'Đang tập dở · ':'')+(n?n+' buổi · gần nhất '+fmtDate(last.start):'Chưa có buổi tập')}
+function profilesSheet(){
+ sheet(`<h3>Ai đang tập?</h3><div class="plist2">${P.list.map(p=>`<div class="prow ${p.id===P.cur?'on':''}"><button class="pbtn" data-act="p-switch" data-id="${p.id}">${avatar(p,1)}<span><b>${esc(p.name)}</b><small>${esc(profStat(p))}</small></span>${p.id===P.cur?'<i>Đang dùng</i>':''}</button><button class="icon" data-act="p-edit" data-id="${p.id}" aria-label="Sửa hồ sơ ${esc(p.name)}">${ICON.dots}</button></div>`).join('')}</div>
+ <button class="btn red block" data-act="p-new">+ Thêm người tập</button>
+ <p class="mute small">Mỗi người có lịch sử, routine, số đo và cài đặt riêng. Tất cả chỉ lưu trên máy này.</p>
+ <p class="lbl">Bạn bè dùng trên điện thoại riêng</p><p class="mute small" style="margin:0">Gửi link để họ tự cài; dữ liệu của mỗi người nằm trên máy của họ.</p>
+ <button class="btn block" data-act="share-app">Gửi link cài app</button>`,'tall')}
+function profEdit(p){const isNew=!p;S.pcol=p?p.color:(P.list.length%PC.length);
+ sheet(`<h3>${isNew?'Người tập mới':'Sửa hồ sơ'}</h3><input id="pf-name" class="field" value="${p?esc(p.name):''}" placeholder="Tên, ví dụ: Minh" autocomplete="off" maxlength="30">
+ <p class="lbl">Màu đĩa tạ</p><div class="chips" id="pf-col">${PC.map((c,i)=>`<button class="chip colchip ${i===S.pcol?'on':''}" data-act="pf-col" data-c="${i}" aria-label="${PCN[i]}"><span class="dot" style="background:${c}"></span>${PCN[i]}</button>`).join('')}</div>
+ ${isNew?`<div class="tg" style="margin-top:8px"><span>Tạo sẵn routine mẫu Push / Legs / Upper / Pull</span><button class="sw on" id="pf-seed" data-act="pf-seed" aria-pressed="true" aria-label="Routine mẫu"></button></div>`:''}
+ <button class="btn red block" data-act="pf-save" data-id="${p?p.id:''}">${isNew?'Tạo và chuyển sang':'Lưu'}</button>
+ ${p&&P.list.length>1?(p.id===P.cur?`<p class="mute small" style="text-align:center">Muốn xoá hồ sơ đang dùng thì chuyển sang người khác trước.</p>`:`<button class="btn block danger" style="background:none" data-act="pf-del" data-id="${p.id}">Xoá hồ sơ này</button>`):''}`)}
+function switchTo(id){if(id===P.cur){closeSheet();return}save();P.cur=id;saveP();KEY=keyOf(id);D=loadD(id)||seed();EXM=null;
+ S=Object.assign(S,{tab:'home',view:null,exId:null,q:'',grp:'',met:null,draft:null,pick:null,cf:null});closeSheet();render();scrollTo(0,0);toast('Đã chuyển sang '+curP().name);scheduleSync(400)}
+/* ---------- actions ---------- */
+const A={
+ close:()=>closeSheet(),
+ 'cloud-edit':()=>{S.cfgEdit=true;settingsSheet()},
+ 'cloud-cfg':()=>{const url=($('#cf-url').value||'').trim().replace(/\/+$/,''),key=($('#cf-key').value||'').trim();
+  if(!/^(https:\/\/[^\s/]+|http:\/\/(localhost|127\.0\.0\.1)(:\d+)?)/.test(url))return toast('URL phải có dạng https://xxxx.supabase.co');if(key.length<20)return toast('Key chưa đúng');
+  try{localStorage.setItem('ggym.cloud',JSON.stringify({url,key}))}catch(e){}S.cfgEdit=false;settingsSheet();toast('Đã lưu cấu hình Supabase')},
+ 'au-in':async()=>{const em=($('#au-email').value||'').trim(),pw=$('#au-pass').value||'';if(!em||!pw)return toast('Nhập email và mật khẩu');
+  try{const j=await sbFetch('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:em,password:pw})},false);saveSession(j);settingsSheet();toast('Đã đăng nhập, đang đồng bộ…');await sync(true);settingsSheet()}catch(e){toast(authMsg(e))}},
+ 'au-up':async()=>{const em=($('#au-email').value||'').trim(),pw=$('#au-pass').value||'';if(!em||pw.length<6)return toast('Nhập email và mật khẩu ít nhất 6 ký tự');
+  try{const j=await sbFetch('/auth/v1/signup',{method:'POST',body:JSON.stringify({email:em,password:pw})},false);
+   if(j&&j.access_token){saveSession(j);settingsSheet();await sync(true);settingsSheet()}else toast('Đã gửi email xác nhận — bấm link trong email rồi quay lại bấm Đăng nhập')}catch(e){toast(authMsg(e))}},
+ 'au-out':()=>confirmSheet('Đăng xuất khỏi tài khoản đồng bộ? Dữ liệu trên máy vẫn giữ nguyên.','Đăng xuất',async()=>{try{await sbFetch('/auth/v1/logout',{method:'POST'})}catch(e){}setAuth(null);D.sync={};saveRaw();toast('Đã đăng xuất')}),
+ 'sync-now':()=>sync(true),
+
+ profiles:()=>profilesSheet(),
+ 'p-switch':d=>switchTo(d.id),
+ 'p-new':()=>profEdit(null),
+ 'p-edit':d=>{const p=P.list.find(x=>x.id===d.id);if(p)profEdit(p)},
+ 'pf-col':d=>{S.pcol=+d.c;$$('#pf-col .chip').forEach(c=>c.classList.toggle('on',c.dataset.c===d.c))},
+ 'pf-seed':(d,b)=>{const on=!b.classList.contains('on');b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)},
+ 'pf-save':d=>{const name=($('#pf-name').value||'').trim();if(!name)return toast('Nhập tên người tập');
+  if(P.list.some(x=>x.id!==d.id&&norm(x.name)===norm(name)))return toast('Đã có hồ sơ trùng tên');
+  if(d.id){const p=P.list.find(x=>x.id===d.id);p.name=name;p.color=S.pcol;saveP();closeSheet();render();toast('Đã lưu hồ sơ');return}
+  const id=uid(),x=seed(),sb=$('#pf-seed');if(sb&&!sb.classList.contains('on'))x.routines=[];else x.routines.forEach(r=>r.days=[]);x.settings.hintOff=D.settings.hintOff;
+  try{localStorage.setItem(keyOf(id),JSON.stringify(x))}catch(e){return toast('Bộ nhớ máy đầy, không tạo được hồ sơ')}
+  P.list.push({id,name,color:S.pcol});saveP();switchTo(id)},
+ 'pf-del':d=>{const p=P.list.find(x=>x.id===d.id);if(!p||p.id===P.cur)return;
+  confirmSheet(`Xoá hồ sơ <b>${esc(p.name)}</b> cùng toàn bộ lịch sử tập, routine và số đo của người này? Không thể hoàn tác — nếu cần, chuyển sang hồ sơ đó và xuất bản sao lưu trước.`,'Xoá hồ sơ',()=>{
+   try{localStorage.removeItem(keyOf(p.id));localStorage.removeItem('ggym.auth.'+p.id)}catch(e){}P.list=P.list.filter(x=>x.id!==p.id);saveP();render();toast('Đã xoá hồ sơ '+p.name)})},
+ 'share-app':async()=>{const url=location.origin+location.pathname.replace(/index\.html$/,'');
+  try{if(navigator.share){await navigator.share({title:'GGym',text:'App ghi buổi tập gym, mở bằng Safari rồi Thêm vào MH chính:',url});return}}catch(e){if(e&&e.name==='AbortError')return}
+  try{await navigator.clipboard.writeText(url);toast('Đã chép link: '+url)}catch(e){toast('Link app: '+url)}},
+
+ 'cf-ok':()=>{const f=S.cf;S.cf=null;closeSheet();f&&f()},
+ tab:d=>{if(S.view==='routine')S.view=null;if(d.t===S.tab&&S.tab==='ex')S.exId=null;S.tab=d.t;render();scrollTo(0,0)},
+ settings:()=>settingsSheet(),
+ 'hint-off':()=>{D.settings.hintOff=true;save();render()},
+ 'start-empty':()=>begin({name:'Buổi tập '+partOfDay()}),
+ 'start-routine':d=>{const r=D.routines.find(x=>x.id===d.id);if(r)begin({name:r.name,routineId:r.id,exercises:r.items.map(it=>({exId:it.exId,sets:Array.from({length:it.sets},blank)}))})},
+ resume:()=>{S.view='workout';render();scrollTo(0,0)},
+ minimize:()=>{S.view=null;render()},
+ check:d=>{const a=D.active,e=a.exercises[d.i],s=e.sets[d.j];
+  if(!s.done){const p=prevOf(e)[d.j];if(s.w===''&&p)s.w=fx(p.w);if(s.r===''&&p)s.r=String(p.r);if(s.w==='')s.w='0';
+   if(!(num(s.r)>0)){toast('Nhập số reps trước đã');s.w=s.w==='0'?'':s.w;return}
+   s.done=true;if(!a.editId)startRest(D.restBy[e.exId]!=null?D.restBy[e.exId]:D.settings.rest)}else s.done=false;
+  save();render()},
+ addset:d=>{const sets=D.active.exercises[d.i].sets,l=sets[sets.length-1];sets.push(l?{w:l.w,r:l.r,done:false,t:'n'}:blank());save();render()},
+ setmenu:d=>{const s=D.active.exercises[d.i].sets[d.j];sheet(`<h3>Set</h3><div class="list"><button data-act="settype" data-i="${d.i}" data-j="${d.j}">${s.t==='w'?'Đổi thành set thường':'Đánh dấu là set khởi động (K)'}</button><button class="danger" data-act="setdel" data-i="${d.i}" data-j="${d.j}">Xoá set này</button></div>`)},
+ settype:d=>{const s=D.active.exercises[d.i].sets[d.j];s.t=s.t==='w'?'n':'w';save();closeSheet();render()},
+ setdel:d=>{D.active.exercises[d.i].sets.splice(d.j,1);save();closeSheet();render()},
+ exmenu:d=>{const i=+d.i,e=D.active.exercises[i],cur=D.restBy[e.exId]!=null?D.restBy[e.exId]:D.settings.rest,L=D.active.exercises.length;
+  sheet(`<h3>${esc(exOf(e.exId).name)}</h3><p class="lbl">Thời gian nghỉ cho bài này</p><div class="chips">${[0,45,60,90,120,150,180,240].map(s=>`<button class="chip ${s===cur?'on':''}" data-act="exrest" data-i="${i}" data-s="${s}">${s?fmtClock(s):'Tắt'}</button>`).join('')}</div>
+  <div class="list"><button data-act="exmove" data-i="${i}" data-d="-1" ${i?'':'disabled'}>Chuyển lên</button><button data-act="exmove" data-i="${i}" data-d="1" ${i<L-1?'':'disabled'}>Chuyển xuống</button><button data-act="exswap" data-i="${i}">Thay bằng bài khác</button><button class="danger" data-act="exdel" data-i="${i}">Bỏ bài này khỏi buổi tập</button></div>`)},
+ exrest:d=>{D.restBy[D.active.exercises[d.i].exId]=+d.s;save();closeSheet();render()},
+ exmove:d=>{const x=D.active.exercises,i=+d.i,j=i+ +d.d;if(j<0||j>=x.length)return;[x[i],x[j]]=[x[j],x[i]];save();closeSheet();render()},
+ exswap:d=>{const i=+d.i;openPicker(id=>{D.active.exercises[i].exId=id;save();render()},'Thay bằng bài')},
+ exdel:d=>{D.active.exercises.splice(+d.i,1);save();closeSheet();render()},
+ addex:()=>openPicker(id=>{const n=Math.max(3,(exHistory(id,D.active.editId,D.active.start)[0]||{sets:[]}).sets.length);D.active.exercises.push({exId:id,sets:Array.from({length:Math.min(n,6)},blank)});save();render();setTimeout(()=>scrollTo(0,document.body.scrollHeight),60)}),
+ exinfo:d=>{const id=d.id,h=exHistory(id),b=best(h.flatMap(x=>x.sets));sheet(`<h3>${esc(exOf(id).name)}</h3>${demoHtml(exOf(id))}<div class="tiles" style="margin-top:14px"><div><b>${b.mw?fx(b.mw):'—'}</b><span>Tạ nặng nhất (kg)</span></div><div><b>${b.e1&&b.mw?fx(r1(b.e1)):'—'}</b><span>1RM ước tính (kg)</span></div></div><p class="lbl">Các buổi gần nhất</p>${h.slice(0,4).map(sessHtml).join('')||'<p class="empty">Chưa tập bài này.</p>'}`,'tall')},
+ 'ref-pick':d=>{const e=exOf(d.id);S.refEx=d.id;S.rq=e.name.replace(/\(.*?\)/g,'').split(/\s+/).filter(w=>w.length>2).slice(0,2).join(' ');
+  sheet(`<h3>Chọn hình minh hoạ</h3><p class="mute small" style="margin-top:-4px">Ảnh từ thư viện miễn phí free-exercise-db, cần có mạng ở lần xem đầu.</p><input class="search" type="search" data-f="refq" value="${esc(S.rq)}" placeholder="Tên tiếng Anh, ví dụ: cable row" autocomplete="off"><div id="reflist" class="plist">${refList()}</div>${e.ref?`<button class="btn block danger" style="background:none" data-act="ref-set" data-r="">Bỏ hình đang dùng</button>`:''}`,'tall')},
+ 'ref-set':d=>{const e=D.exercises.find(x=>x.id===S.refEx);if(e){if(d.r)e.ref=d.r;else delete e.ref;e.u=Date.now();save()}closeSheet();render();toast(d.r?'Đã gắn hình minh hoạ':'Đã bỏ hình')},
+ pick:d=>{const cb=S.pick;S.pick=null;closeSheet();cb&&cb(d.id)},
+ newex:d=>exSheet(null,!!d.p),
+ nxg:d=>{S.nxg=d.g;$$('#nx-g .chip').forEach(c=>c.classList.toggle('on',c.dataset.g===d.g))},
+ 'nx-save':d=>{const name=($('#nx-name').value||'').trim();if(!name)return toast('Nhập tên bài tập');
+  const dup=D.exercises.find(e=>norm(e.name)===norm(name)&&e.id!==d.id);if(dup)return toast('Đã có bài tập trùng tên');
+  let id=d.id;if(id){const e=D.exercises.find(x=>x.id===id);e.name=name;e.group=S.nxg;e.u=Date.now()}else{id=uid();D.exercises.push({id,u:Date.now(),name,group:S.nxg,custom:true})}
+  EXM=null;save();closeSheet();if(d.p&&S.pick){const cb=S.pick;S.pick=null;cb(id)}else{render();toast('Đã lưu bài tập')}},
+ 'ex-remove':d=>{const id=d.id,used=D.workouts.some(w=>w.exercises.some(e=>e.exId===id))||D.routines.some(r=>r.items.some(i=>i.exId===id))||(D.active&&D.active.exercises.some(e=>e.exId===id));
+  if(used)return toast('Bài này đã có trong lịch sử / routine nên không xoá được');
+  confirmSheet('Xoá bài tập này khỏi danh sách?','Xoá',()=>{tomb(id);D.exercises=D.exercises.filter(e=>e.id!==id);EXM=null;S.exId=null;save();render()})},
+ 'rest-adj':d=>{const a=D.active;if(!a||!a.restEnd)return;a.restEnd+=+d.s*1000;a.restDur=Math.max(1,a.restDur+ +d.s);if(a.restEnd<=Date.now())a.restEnd=0;save();restTick()},
+ 'rest-skip':()=>{if(D.active){D.active.restEnd=0;save();restTick()}},
+ finish:()=>{const a=D.active;let done=0,open=0;a.exercises.forEach(e=>e.sets.forEach(s=>s.done?done++:open++));
+  if(!done)return confirmSheet('Chưa có set nào được đánh dấu xong (✓). Huỷ buổi tập này luôn?','Huỷ buổi tập',()=>{D.active=null;save();S.view=null;render()});
+  if(open)return confirmSheet(`Còn ${open} set chưa đánh dấu xong. Bỏ qua các set đó và lưu buổi tập?`,'Lưu buổi tập',doFinish);doFinish()},
+ discard:()=>confirmSheet(D.active.editId?'Bỏ các thay đổi vừa sửa?':'Huỷ buổi tập này? Các set đã ghi sẽ mất.',D.active.editId?'Bỏ thay đổi':'Huỷ buổi tập',()=>{D.active=null;save();S.view=null;render()}),
+ w2r:d=>{const w=findW(d.id);if(!w)return;D.routines.push({id:uid(),u:Date.now(),name:w.name,days:[],items:w.exercises.map(e=>({exId:e.exId,sets:Math.max(1,e.sets.filter(s=>s.t!=='w').length)}))});save();closeSheet();toast('Đã lưu thành routine');render()},
+ wopen:d=>{const w=findW(d.id);if(w)wDetail(w)},
+ wedit:d=>{const w=findW(d.id);if(!w)return;begin({editId:w.id,name:w.name,start:w.start,end:w.end,routineId:w.routineId,exercises:w.exercises.map(e=>({exId:e.exId,sets:e.sets.map(s=>({w:fx(s.w),r:String(s.r),t:s.t||'n',done:true}))}))})},
+ wrepeat:d=>{const w=findW(d.id);if(w)begin({name:w.name,routineId:w.routineId,exercises:w.exercises.map(e=>({exId:e.exId,sets:e.sets.map(s=>({w:'',r:'',done:false,t:s.t||'n'}))}))})},
+ wdel:d=>confirmSheet('Xoá buổi tập này khỏi lịch sử?','Xoá buổi tập',()=>{tomb(d.id);D.workouts=D.workouts.filter(w=>w.id!==d.id);save();render();toast('Đã xoá')}),
+ grp:d=>{S.grp=d.g==='Tất cả'?'':d.g;render()},
+ exopen:d=>{S.tab='ex';S.exId=d.id;S.met=null;render();scrollTo(0,0)},
+ exback:()=>{S.exId=null;render()},
+ exedit:()=>exSheet(exOf(S.exId)),
+ met:d=>{S.met=d.k;render()},
+ bm:d=>{S.bm=d.k;render()},
+ 'body-add':()=>{const kg=num($('#bw').value),bf=num($('#bf').value),v=$('#bd').value;
+  if(!(kg>20&&kg<300))return toast('Nhập cân nặng hợp lệ');if(bf&&!(bf>2&&bf<70))return toast('% mỡ không hợp lệ');
+  const p=(v||ymd(new Date())).split('-').map(Number),t=new Date(p[0],p[1]-1,p[2],12).getTime();
+  const ex=D.body.find(b=>dayKey(b.d)===dayKey(t));if(ex){ex.kg=kg;ex.bf=bf||ex.bf||0;ex.u=Date.now();toast('Đã cập nhật số đo ngày '+dm(t))}else{D.body.push({id:uid(),u:Date.now(),d:t,kg,bf:bf||0});toast('Đã ghi số đo')}
+  save();render()},
+ 'body-open':d=>{const b=D.body.find(x=>x.id===d.id);if(!b)return;sheet(`<h3>${fmtDate(b.d)}</h3><p class="cf">${fx(b.kg)} kg${b.bf?' · '+fx(b.bf)+' % mỡ':''}</p><button class="btn block danger" data-act="body-del" data-id="${b.id}">Xoá lần đo này</button><button class="btn block" data-act="close">Đóng</button>`)},
+ 'body-del':d=>{tomb(d.id);D.body=D.body.filter(b=>b.id!==d.id);save();closeSheet();render();toast('Đã xoá')},
+ 'r-new':()=>{S.draft={id:null,name:'',days:[],items:[]};S.view='routine';render();scrollTo(0,0)},
+ 'r-edit':d=>{const r=D.routines.find(x=>x.id===d.id);if(!r)return;S.draft=JSON.parse(JSON.stringify(r));S.draft.days=S.draft.days||[];S.view='routine';render();scrollTo(0,0)},
+ 'r-cancel':()=>{S.draft=null;S.view=null;render()},
+ 'r-day':d=>{const r=S.draft,x=+d.d;r.days=r.days.includes(x)?r.days.filter(y=>y!==x):r.days.concat(x);render()},
+ 'r-sets':d=>{const it=S.draft.items[d.i];it.sets=Math.min(10,Math.max(1,it.sets+ +d.s));render()},
+ 'r-move':d=>{const x=S.draft.items,i=+d.i,j=i+ +d.d;if(j<0||j>=x.length)return;[x[i],x[j]]=[x[j],x[i]];render()},
+ 'r-del':d=>{S.draft.items.splice(+d.i,1);render()},
+ 'r-add':()=>openPicker(id=>{S.draft.items.push({exId:id,sets:3});render()}),
+ 'r-save':()=>{const r=S.draft;r.name=(r.name||'').trim();if(!r.name)return toast('Đặt tên cho routine');if(!r.items.length)return toast('Thêm ít nhất một bài tập');
+  r.u=Date.now();if(r.id){const i=D.routines.findIndex(x=>x.id===r.id);D.routines[i]=r}else{r.id=uid();D.routines.push(r)}save();S.draft=null;S.view=null;S.tab='home';render();toast('Đã lưu routine')},
+ 'r-remove':()=>confirmSheet('Xoá routine này? Lịch sử tập không bị ảnh hưởng.','Xoá routine',()=>{tomb(S.draft.id);D.routines=D.routines.filter(x=>x.id!==S.draft.id);save();S.draft=null;S.view=null;render()}),
+ defrest:d=>{D.settings.rest=+d.s;save();$$('[data-act=defrest]').forEach(c=>c.classList.toggle('on',c.dataset.s===d.s))},
+ tgl:(d,b)=>{D.settings[d.k]=!D.settings[d.k];save();b.classList.toggle('on',D.settings[d.k]);b.setAttribute('aria-pressed',D.settings[d.k]);wake()},
+ export:()=>exportData(),
+ wipe:()=>confirmSheet((multi()?'Xoá toàn bộ dữ liệu của '+esc(curP().name)+' (buổi tập, routine, bài tập tự tạo, số đo)?':'Xoá toàn bộ buổi tập, routine, bài tập tự tạo và số đo trên máy này?')+' Không thể hoàn tác — nên xuất bản sao lưu trước.','Xoá hết dữ liệu',()=>{const del=Object.assign({},D.del),t=Date.now(),sy=D.sync;['workouts','body','routines'].forEach(k=>D[k].forEach(i=>del[i.id]=t));D.exercises.forEach(e=>{if(e.custom)del[e.id]=t});D=seed();D.del=del;D.sync=sy;EXM=null;save();S.view=null;S.tab='home';render();toast('Đã xoá toàn bộ dữ liệu')})
+};
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const f=A[b.dataset.act];if(f){e.preventDefault();unlockAudio();f(b.dataset,b,e)}});
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[role=button][data-act]')){e.preventDefault();e.target.click()}});
+document.addEventListener('input',e=>{const t=e.target,f=t.dataset.f;if(!f)return;
+ if((f==='w'||f==='r')&&D.active){const s=D.active.exercises[t.dataset.i].sets[t.dataset.j];s[f]=t.value;save();if(s.done)updWk()}
+ else if(f==='wname'&&D.active){D.active.name=t.value;save()}
+ else if(f==='pickq'){S.pq=t.value;$('#picklist').innerHTML=pickList()}
+ else if(f==='exq'){S.q=t.value;$('#exlist').innerHTML=exListHtml()}
+ else if(f==='rname'&&S.draft){S.draft.name=t.value}
+ else if(f==='refq'){S.rq=t.value;$('#reflist').innerHTML=refList()}});
+document.addEventListener('change',async e=>{const t=e.target,f=t.dataset.f;if(f!=='imp-json'&&f!=='imp-hevy')return;const file=t.files&&t.files[0];if(!file)return;
+ let txt='';try{txt=await file.text()}catch(err){return toast('Không đọc được file')}t.value='';if(f==='imp-json')importJSON(txt);else importHevy(txt)});
+document.addEventListener('focusin',e=>{if(e.target.matches('.row input')){const t=e.target;setTimeout(()=>{try{t.select()}catch(x){}},0)}});
+
+/* ---------- timers, sound, wake lock ---------- */
+let ac=null;function unlockAudio(){try{if(!ac){const C=window.AudioContext||window.webkitAudioContext;if(C)ac=new C()}if(ac&&ac.state==='suspended')ac.resume()}catch(e){}}
+function beep(){if(!D.settings.sound||!ac)return;try{[0,.28,.56].forEach((t,i)=>{const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.value=i===2?1175:880;o.connect(g);g.connect(ac.destination);const s=ac.currentTime+t;g.gain.setValueAtTime(.0001,s);g.gain.exponentialRampToValueAtTime(.35,s+.02);g.gain.exponentialRampToValueAtTime(.0001,s+.22);o.start(s);o.stop(s+.25)})}catch(e){}}
+function restTick(){const a=D.active,bar=$('#rest');if(!a||!a.restEnd){bar.hidden=true;return}
+ const left=(a.restEnd-Date.now())/1000;
+ if(left<=0){const late=left<-5;a.restEnd=0;save();bar.hidden=true;if(!late){beep();try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}toast('Hết giờ nghỉ — vào set tiếp!')}return}
+ bar.hidden=false;$('#rest-t').textContent=fmtClock(Math.ceil(left));$('#rest-p').style.width=Math.min(100,100*left/(a.restDur||1))+'%'}
+function tick(){const a=D.active;if(a){const sec=((a.editId?a.end:Date.now())-a.start)/1000;$$('.elapsed').forEach(el=>el.textContent=fmtClock(sec))}restTick()}
+setInterval(tick,500);
+let wl=null;async function wake(){try{const want=D.settings.wake&&D.active&&S.view==='workout'&&document.visibilityState==='visible';
+ if(want&&!wl&&navigator.wakeLock){wl=await navigator.wakeLock.request('screen');wl.addEventListener('release',()=>{wl=null})}else if(!want&&wl){await wl.release();wl=null}}catch(e){wl=null}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){tick();wake();scheduleSync(300)}});
+window.addEventListener('online',()=>scheduleSync(300));
+
+/* ---------- boot ---------- */
+if(D.active)S.view='workout';
+render();
+scheduleSync(600);
+if(!embed&&'serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+try{if(standalone&&navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+}
+</script>
+</body>
+</html>
