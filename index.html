@@ -86,6 +86,16 @@ h2{font:700 22px/1.1 var(--fc),sans-serif;margin:28px 0 2px}
 .rc p{margin:0 0 2px;font-size:13px;color:var(--mute)}
 .hint{background:var(--card);border:1.5px dashed var(--line);border-radius:14px;padding:12px 6px 12px 14px;margin-top:12px;font-size:13px;display:flex;gap:6px;align-items:flex-start}
 .hint p{margin:0;flex:1}
+.hint.maph{width:100%;text-align:left;align-items:center;border-color:var(--red);border-style:solid;color:var(--ink);margin:4px 0 0}
+.hint.maph span{font:700 24px/1 var(--fc);color:var(--redt);padding:0 8px}
+.mp{padding:12px}
+.mp-h,.mp-s{display:flex;align-items:center;gap:10px}
+.mp-h>div,.mp-s>div{flex:1;min-width:0}
+.mp-h b{display:block;font-size:15px}
+.mp-s{padding:6px 0;border-top:1px solid var(--line)}
+.mp-s b{display:block;font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp small{display:block;font-size:12px;color:var(--mute)}
+.mp .row2{margin-top:10px}
 /* workout */
 .top.wk{justify-content:space-between}
 .wk-t{text-align:center;line-height:1.1}
@@ -625,7 +635,51 @@ function exListHtml(){const q=norm(S.q),u=usage();
  const list=D.exercises.filter(e=>(!S.grp||e.group===S.grp)&&(!q||norm(e.name).includes(q)||norm(e.group).includes(q)))
   .sort((a,b)=>((u[b.id]||{}).n||0)-((u[a.id]||{}).n||0)||a.name.localeCompare(b.name));
  return list.map(e=>{const x=u[e.id];return `<div class="li" data-act="exopen" data-id="${e.id}" role="button" tabindex="0"><div class="lim">${thumb(e)}<div><b>${esc(e.name)}</b><small>${esc(e.group)}${x?' · '+x.n+' buổi':''}</small></div></div><span class="pv">${x&&x.mw?fx(x.mw)+' kg':''}</span></div>`}).join('')||'<p class="empty">Không tìm thấy bài tập.</p>'}
-function vExList(){return hdr('Bài tập',avBtn(),`<button class="icon" data-act="newex" aria-label="Bài tập mới">+</button>`)+
+/* ---------- map bài tập: bài đã tập nhưng không phải bài có sẵn (nhập từ Hevy / tự tạo / đã xoá) ---------- */
+const SYN={db:'dumbbell',dumbbells:'dumbbell',bb:'barbell',kb:'kettlebell',ohp:'overhead press',rdl:'romanian deadlift',sldl:'stiff leg deadlift',
+ triceps:'tricep',biceps:'bicep',rows:'row',raises:'raise',curls:'curl',extensions:'extension',presses:'press',flyes:'fly',flys:'fly',flies:'fly',
+ crossovers:'crossover',butterfly:'fly',pulldowns:'pulldown',pushdowns:'pushdown',squats:'squat',lunges:'lunge',dips:'dip',shrugs:'shrug',delts:'delt',deltoid:'delt',
+ lats:'lat',glutes:'glute',calves:'calf',pullups:'pullup',chinups:'chinup',pushups:'pushup',situps:'situp'};
+const EQUIP=new Set(['barbell','dumbbell','cable','machine','smith','kettlebell','band','bodyweight','ez']);
+const MOVE=new Set(['press','fly','curl','row','squat','deadlift','raise','extension','pushdown','pulldown','pullup','chinup','pushup','dip','lunge','thrust','shrug','crunch','kickback','pullover','crossover','situp','abduction','adduction']);
+const GW={chest:'Ngực',pec:'Ngực',shoulder:'Vai',delt:'Vai',back:'Lưng',lat:'Lưng',leg:'Chân',quad:'Chân',hamstring:'Chân',calf:'Chân',glute:'Mông',hip:'Mông',bicep:'Tay trước',tricep:'Tay sau',ab:'Bụng',abs:'Bụng',core:'Bụng'};
+const STOP=new Set(['the','with','on','of','and','a','to','grip','-']);
+function exToks(name){let s=norm(name).replace(/[()\-_/,.]+/g,' ').replace(/\bpull\s+(down|up)s?\b/g,'pull$1').replace(/\bpush\s+(down|up)s?\b/g,'push$1').replace(/\bchin\s+ups?\b/g,'chinup').replace(/\bsit\s+ups?\b/g,'situp').replace(/\bez\s*bar\b/g,'ez');
+ const out=[];for(let t of s.split(/\s+/)){if(!t||STOP.has(t))continue;t=SYN[t]||t;out.push(...t.split(' '))}return new Set(out)}
+function exSim(a,b){const A=exToks(a.name),B=exToks(b.name);if(!A.size||!B.size)return 0;
+ const core=x=>[...x].filter(t=>!EQUIP.has(t)),cA=core(A),cB=new Set(core(B)),eA=[...A].filter(t=>EQUIP.has(t)),eB=[...B].filter(t=>EQUIP.has(t));
+ const inter=cA.filter(t=>cB.has(t)).length;let sc=cA.length+cB.size?2*inter/(cA.length+cB.size):0;
+ if(eA.length&&eB.length)sc+=eA.some(t=>eB.includes(t))?.12:-.12;
+ const mA=cA.filter(t=>MOVE.has(t)),mB=[...cB].filter(t=>MOVE.has(t));if(mA.length&&mB.length)sc+=mA.some(t=>mB.includes(t))?.15:-.15;
+ const gA=a.group&&a.group!=='Khác'?a.group:[...A].map(t=>GW[t]).find(Boolean);if(gA&&gA===b.group)sc+=.12;if(!b.custom)sc+=.04;return sc}
+function mapList(){const u=usage(),have=new Set(D.exercises.map(e=>e.id));
+ const custom=D.exercises.filter(e=>e.custom&&!e.keep&&u[e.id]).sort((a,b)=>u[b.id].n-u[a.id].n);
+ const gone=Object.keys(u).filter(id=>!have.has(id));
+ return{u,custom,gone}}
+function mapHtml(){const {u,custom,gone}=mapList();
+ const lib=D.exercises.filter(e=>!e.custom);
+ const sug=e=>D.exercises.filter(x=>x.id!==e.id&&!(x.custom&&!u[x.id])).map(x=>({x,s:exSim(e,x)})).filter(o=>o.s>=.25).sort((p,q)=>q.s-p.s).slice(0,3);
+ const item=e=>{const x=u[e.id],sg=sug(e);
+  return `<div class="card mp"><div class="mp-h">${thumb(e)}<div><b>${esc(e.name)}</b><small>${esc(e.group)} · ${x.n} buổi · lần cuối ${dm(x.last)}${e.src==='hevy'||!e.ref&&!LOCAL.has(e.id)?'':''}</small></div></div>
+  ${sg.length?`<p class="lbl" style="margin:10px 0 4px">Gần giống</p>${sg.map(o=>`<div class="mp-s">${thumb(o.x)}<div><b>${esc(o.x.name)}</b><small>${esc(o.x.group)}${o.x.custom?' · bài tự tạo':''}</small></div><button class="btn sm red" data-act="map-to" data-from="${e.id}" data-to="${o.x.id}">Gộp</button></div>`).join('')}`:`<p class="mute small" style="margin:10px 0 0">Không thấy bài gần giống trong thư viện.</p>`}
+  <div class="row2"><button class="btn sm" data-act="map-pick" data-id="${e.id}">Chọn bài khác</button><button class="btn sm" data-act="map-keep" data-id="${e.id}">Giữ bài riêng</button></div></div>`};
+ const gi=id=>`<div class="card mp"><div class="mp-h"><span class="th none">?</span><div><b>(Bài tập đã xoá)</b><small>${u[id].n} buổi · lần cuối ${dm(u[id].last)}</small></div></div><div class="row2"><button class="btn sm red" data-act="map-pick" data-id="${id}">Chọn bài để map</button></div></div>`;
+ const kept=D.exercises.filter(e=>e.custom&&e.keep&&u[e.id]).length;
+ return `<h3>Map bài tập</h3><p class="mute small" style="margin:-4px 0 6px">Các bài bạn đã tập nhưng không phải bài có sẵn trong thư viện (thường do nhập từ Hevy hoặc tự tạo). Gộp vào bài có sẵn để có hình, hướng dẫn và thống kê nhóm cơ đúng. Lịch sử, kỷ lục và routine được chuyển theo.</p>
+ ${custom.map(item).join('')}${gone.map(gi).join('')}
+ ${!custom.length&&!gone.length?'<p class="empty">Không còn bài nào cần map.</p>':''}
+ ${kept?`<p class="mute small" style="margin:14px 2px 0">${kept} bài đã chọn giữ riêng. <button class="link" data-act="map-unkeep" style="min-height:32px;padding:0">Hiện lại</button></p>`:''}`}
+function mapOpen(){sheet(mapHtml(),'tall')}
+/* chuyển toàn bộ dữ liệu từ bài `from` sang bài `to`, rồi xoá `from` khỏi thư viện */
+function mergeEx(from,to){const t=Date.now();
+ for(const w of D.workouts){let ch=false;for(const e of w.exercises)if(e.exId===from){e.exId=to;ch=true}if(ch)w.u=t}
+ for(const r of D.routines){let ch=false;for(const it of r.items)if(it.exId===from){it.exId=to;ch=true}if(ch)r.u=t}
+ if(D.active)for(const e of D.active.exercises)if(e.exId===from)e.exId=to;
+ if(D.restBy[from]!=null){if(D.restBy[to]==null)D.restBy[to]=D.restBy[from];delete D.restBy[from]}
+ if(D.exercises.some(e=>e.id===from)){tomb(from);D.exercises=D.exercises.filter(e=>e.id!==from)}
+ EXM=null;for(const w of D.workouts)w.prs=computePRs(w);save()}
+function vExList(){const mp=mapList(),mn=mp.custom.length+mp.gone.length;return hdr('Bài tập',avBtn(),`<button class="icon" data-act="newex" aria-label="Bài tập mới">+</button>`)+
+ (mn?`<button class="hint maph" data-act="map-open"><p><b>${mn} bài đã tập chưa có trong thư viện gốc</b><br>Xem bài gần giống và gộp lại</p><span aria-hidden="true">›</span></button>`:'')+
  `<input class="search" type="search" data-f="exq" value="${esc(S.q)}" placeholder="Tìm bài tập…" autocomplete="off"><div class="chips scroll">${['Tất cả'].concat(GROUPS).map(g=>`<button class="chip ${(S.grp||'Tất cả')===g?'on':''}" data-act="grp" data-g="${g}">${g}</button>`).join('')}</div><div id="exlist">${exListHtml()}</div>`}
 const MET={e1:{l:'1RM',f:b=>b.e1,u:'kg'},mw:{l:'Tạ max',f:b=>b.mw,u:'kg'},tv:{l:'Volume',f:b=>b.tv,u:'kg'},mr:{l:'Reps',f:b=>b.mr,u:'reps'}};
 const sessHtml=x=>`<div class="sess"><b>${fmtDate(x.w.start)} · ${esc(x.w.name)}</b><p>${x.sets.map(s=>`${s.t==='w'?'<span class="wu">K</span> ':''}${fx(s.w)}×${s.r}`).join('  ·  ')}</p></div>`;
@@ -1077,6 +1131,13 @@ const A={
  wrepeat:d=>{const w=findW(d.id);if(w)begin({name:w.name,routineId:w.routineId,exercises:w.exercises.map(e=>({exId:e.exId,sets:e.sets.map(s=>({w:'',r:'',done:false,t:s.t||'n'}))}))})},
  wdel:d=>confirmSheet('Xoá buổi tập này khỏi lịch sử?','Xoá buổi tập',()=>{tomb(d.id);D.workouts=D.workouts.filter(w=>w.id!==d.id);save();render();toast('Đã xoá')}),
  grp:d=>{S.grp=d.g==='Tất cả'?'':d.g;render()},
+ 'map-open':()=>mapOpen(),
+ 'map-to':d=>{const a=exOf(d.from),b=exOf(d.to),n=(usage()[d.from]||{n:0}).n;
+  confirmSheet(`Gộp <b>${esc(a.name)}</b> (${n} buổi) vào <b>${esc(b.name)}</b>? Lịch sử, kỷ lục và routine của bài này sẽ chuyển sang bài kia, rồi bài <b>${esc(a.name)}</b> bị xoá khỏi thư viện.`,'Gộp bài',()=>{mergeEx(d.from,d.to);render();mapOpen();toast('Đã gộp vào '+b.name)})},
+ 'map-pick':d=>{const from=d.id;openPicker(id=>{if(id===from)return mapOpen();const a=exOf(from),b=exOf(id),n=(usage()[from]||{n:0}).n;
+  confirmSheet(`Gộp <b>${esc(a.name)}</b> (${n} buổi) vào <b>${esc(b.name)}</b>?`,'Gộp bài',()=>{mergeEx(from,id);render();mapOpen();toast('Đã gộp vào '+b.name)})},'Map vào bài')},
+ 'map-keep':d=>{const e=D.exercises.find(x=>x.id===d.id);if(!e)return;e.keep=true;e.u=Date.now();save();render();mapOpen();toast('Đã giữ bài riêng — có thể sửa nhóm cơ / hình trong trang bài')},
+ 'map-unkeep':()=>{for(const e of D.exercises)if(e.keep){delete e.keep;e.u=Date.now()}save();render();mapOpen()},
  exopen:d=>{S.tab='ex';S.exId=d.id;S.met=null;render();scrollTo(0,0)},
  exback:()=>{S.exId=null;render()},
  exedit:()=>exSheet(exOf(S.exId)),
