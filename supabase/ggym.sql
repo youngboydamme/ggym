@@ -126,6 +126,10 @@ select
   nullif((b ->> 'c_chest')::numeric, 0) as chest_cm,
   nullif((b ->> 'c_shld')::numeric, 0) as shoulders_cm,
   nullif((b ->> 'c_thigh')::numeric, 0) as thigh_cm,
-  nullif((b ->> 'c_arm')::numeric, 0) as upper_arm_cm
+  nullif((b ->> 'c_arm')::numeric, 0) as upper_arm_cm,
+  nullif((b ->> 'c_thigh_l')::numeric, 0) as thigh_left_cm,
+  nullif((b ->> 'c_thigh_r')::numeric, 0) as thigh_right_cm,
+  nullif((b ->> 'c_arm_l')::numeric, 0) as upper_arm_left_cm,
+  nullif((b ->> 'c_arm_r')::numeric, 0) as upper_arm_right_cm
 from public.ggym_docs d
 cross join lateral jsonb_array_elements(coalesce(d.doc -> 'body', '[]'::jsonb)) as b;
