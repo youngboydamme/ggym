@@ -10,8 +10,7 @@ App ghi buổi tập gym cá nhân cho iPhone, dạng web app cài lên màn hì
 - Lịch sử, kỷ lục cá nhân (PR), biểu đồ tiến bộ từng bài, kỷ lục theo số reps
 - Cân nặng và % mỡ theo thời gian
 - Hình minh hoạ và lưu ý kỹ thuật tiếng Việt cho 48 bài có sẵn, link video YouTube
-- Nhiều hồ sơ người tập trên cùng một máy
-- Sao lưu / khôi phục JSON, nhập lịch sử từ Hevy (CSV)
+- Sao lưu / khôi phục JSON
 - Đồng bộ Supabase (tuỳ chọn): offline-first, gộp thay đổi giữa nhiều máy
 
 ## Cài lên iPhone
@@ -29,7 +28,7 @@ App ghi buổi tập gym cá nhân cho iPhone, dạng web app cài lên màn hì
 4. Vào **Project Settings → API Keys**, lấy **Project URL** và **Publishable key** (hoặc anon key). Có hai cách dùng:
    - Nhập vào app: **Cài đặt → Đồng bộ đám mây**.
    - Hoặc điền vào hằng số `CLOUD0` trong `index.html`, để ai cài app cũng có sẵn cấu hình.
-5. Trong app: **Cài đặt → Tạo tài khoản / Đăng nhập**. Mỗi hồ sơ người tập dùng một tài khoản riêng.
+5. Trong app: **Cài đặt → Tạo tài khoản / Đăng nhập**. Mỗi email là một hồ sơ: đăng nhập email khác thì máy tải dữ liệu của email đó (dữ liệu email cũ vẫn trên server).
 
 Publishable key (anon key) được thiết kế để đặt công khai trong app. Dữ liệu được bảo vệ bằng Row Level Security: mỗi tài khoản chỉ đọc và ghi được dòng của chính mình, và không có quyền xoá.
 
