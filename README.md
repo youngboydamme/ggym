@@ -4,8 +4,9 @@ App ghi buổi tập gym cá nhân cho iPhone, dạng web app cài lên màn hì
 
 ## Tính năng
 
-- Ghi buổi tập: kg / reps từng set, cột "lần trước", set khởi động, đồng hồ nghỉ có âm báo
-- Routine theo ngày trong tuần
+- Ghi buổi tập: kg / reps từng set, cột "lần trước", set khởi động, đồng hồ nghỉ có âm báo; vuốt set sang trái để xoá
+- Bài thời gian / quãng đường: Plank, Dead Hang… ghi thời gian; Treadmill, chạy, đạp xe… ghi km + thời gian (đổi cách ghi trong Sửa bài tập)
+- Routine theo ngày trong tuần, giữ tên bài để kéo thả đổi thứ tự
 - Lịch sử, kỷ lục cá nhân (PR), biểu đồ tiến bộ từng bài, kỷ lục theo số reps
 - Cân nặng và % mỡ theo thời gian
 - Hình minh hoạ và lưu ý kỹ thuật tiếng Việt cho 48 bài có sẵn, link video YouTube
@@ -45,7 +46,7 @@ Script tạo sẵn 3 view phẳng, thời gian đã đổi sang giờ Việt Nam
 | View | Nội dung |
 |---|---|
 | `ggym_workouts` | Mỗi buổi tập: tên, giờ bắt đầu / kết thúc, thời lượng, số PR |
-| `ggym_sets` | Mỗi set: bài tập, nhóm cơ, kg, reps, volume, 1RM ước tính (Epley), set khởi động |
+| `ggym_sets` | Mỗi set: bài tập, nhóm cơ, kg, reps, volume, 1RM ước tính (Epley), set khởi động, thời gian (giây), quãng đường (km) |
 | `ggym_body` | Cân nặng, % mỡ theo ngày |
 
 Power BI: dùng connector PostgreSQL với chuỗi kết nối lấy từ **Connect → Session pooler**.

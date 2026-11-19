@@ -233,6 +233,33 @@ em.ib{font-style:normal;font-size:11px;font-weight:700;color:var(--redt);border:
 .rrow .icon{width:44px;height:44px;color:var(--mute)}
 .rrow .icon svg{width:20px;height:20px}
 .ex-h .icon:disabled{opacity:.25}
+.ex-h{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.ex-h img{-webkit-touch-callout:none}
+.hero-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:-10px -10px 0 0}
+.hero-h .link{color:inherit;opacity:.85;display:inline-flex;align-items:center;gap:5px;font-size:14px;font-weight:600}
+.hero-h .link svg,.lblr .link svg{width:18px;height:18px}
+.lblr{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lblr .link{display:inline-flex;align-items:center;gap:6px;font-size:14px;margin:10px -8px 0 0}
+/* hàng set theo cách ghi: f1 = 1 ô nhập chiếm 2 cột, f2t = kg / km + thời gian */
+.row:not(.rrow).f1>:nth-child(3){grid-column:span 2}
+.row.f2t{grid-template-columns:34px minmax(0,1fr) 62px 84px 44px}
+.row.rrow.f1>:nth-child(2){grid-column:span 2}
+.row.rrow.f2t{grid-template-columns:34px minmax(0,1fr) minmax(0,1fr) 44px}
+/* vuốt sang trái để hiện nút xoá set */
+.swr{position:relative;margin:0 -4px;border-radius:10px;overflow:hidden}
+.swr>.row{margin:0;position:relative;z-index:1;background:var(--card);touch-action:pan-y;transition:transform .2s ease}
+.swr>.row.done{background:var(--grnbg)}
+.swdel{position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end;padding-right:24px;background:var(--red);color:#fff;font-weight:700;font-size:14px;visibility:hidden}
+.swr.swo .swdel{visibility:visible}
+/* sắp xếp bài bằng kéo thả */
+.ro{display:flex;flex-direction:column;gap:6px}
+.ro-i{display:flex;align-items:center;gap:12px;min-height:60px;padding:6px 4px 6px 10px;background:var(--card);border-radius:14px;box-shadow:var(--sh);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:grab;position:relative}
+.ro-i>span{flex:1;min-width:0}
+.ro-i b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15px}
+.ro-i small{color:var(--mute);font-size:12px}
+.ro-i img{pointer-events:none;-webkit-touch-callout:none}
+.ro-g{width:40px;height:40px;flex:none;display:grid;place-items:center;color:var(--mute)}.ro-g svg{width:22px;height:22px}
+.ro-i.drag{z-index:3;box-shadow:0 12px 30px rgba(0,0,0,.3);cursor:grabbing;transition:none}
 /* settings */
 .tg{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;border-bottom:1px solid var(--line)}
 .sw{width:52px;height:32px;flex:none;border-radius:16px;background:var(--card2);position:relative;border:1px solid var(--line)}
@@ -373,11 +400,13 @@ const ICON={
  down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
  cog:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg>',
- x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+ x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+ grip:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"/></svg>',
+ edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg>'
 };
 
 /* ---------- seed data ---------- */
-const GROUPS=['Ngực','Lưng','Vai','Tay trước','Tay sau','Chân','Mông','Bụng','Khác'];
+const GROUPS=['Ngực','Lưng','Vai','Tay trước','Tay sau','Chân','Mông','Bụng','Cardio','Khác'];
 const EX0=[
 ['bench','Bench Press (Barbell)','Ngực'],['incl-db','Incline Bench Press (Dumbbell)','Ngực'],['db-bench','Bench Press (Dumbbell)','Ngực'],
 ['incl-bb','Incline Bench Press (Barbell)','Ngực'],['chest-press','Chest Press (Machine)','Ngực'],['cable-fly','Cable Fly Crossovers','Ngực'],
@@ -651,9 +680,29 @@ const EX1=[
 ['x-jumping-jack','Jumping Jack','Khác'],
 ['x-wall-ball','Wall Ball','Khác'],
 ['x-man-maker','Man Maker','Khác'],
-['x-dead-hang','Dead Hang','Khác']
+['x-dead-hang','Dead Hang','Khác'],
+['x-treadmill','Treadmill','Cardio','Running_Treadmill'],
+['x-running','Running','Cardio','Trail_Running_Walking'],
+['x-walking','Walking','Cardio','Walking_Treadmill'],
+['x-cycling','Cycling','Cardio','Recumbent_Bike'],
+['x-elliptical-trainer','Elliptical Trainer','Cardio','Elliptical_Trainer'],
+['x-rowing-machine','Rowing Machine','Cardio','Rowing_Stationary'],
+['x-stair-machine','Stair Machine','Cardio','Stairmaster'],
+['x-air-bike','Air Bike','Cardio'],
+['x-jump-rope','Jump Rope','Cardio','Rope_Jumping']
 ];
 const LIB=EX0.concat(EX1);
+/* cách ghi set của từng bài: wr = kg × reps (mặc định), r = chỉ reps, t = thời gian, wt = kg + thời gian, dt = quãng đường + thời gian.
+   Set lưu: w (kg), r (reps), km, tm (giây). Người dùng đổi được trong Sửa bài tập (lưu ở e.ty) */
+const TYS={wr:{l:'Tạ × reps',x:'Bench Press, Squat…',f:['w','r']},r:{l:'Chỉ reps',x:'Push Up, Crunch…',f:['r']},t:{l:'Thời gian',x:'Plank, Dead Hang…',f:['tm']},
+ wt:{l:'Tạ + thời gian',x:'Farmers Walk…',f:['w','tm']},dt:{l:'Quãng đường + thời gian',x:'Treadmill, chạy bộ, đạp xe…',f:['km','tm']}};
+const TY0={'x-plank':'t','x-side-plank':'t','x-wall-sit':'t','x-dead-hang':'t','x-l-sit-hold':'t','x-farmers-walk':'wt','x-treadmill':'dt','x-running':'dt','x-walking':'dt',
+ 'x-cycling':'dt','x-elliptical-trainer':'dt','x-rowing-machine':'dt','x-stair-machine':'t','x-air-bike':'t','x-jump-rope':'t'};
+const FK=['w','r','km','tm'];
+const FLD={w:{h:'kg',im:'decimal',ph:'kg'},r:{h:'Reps',im:'numeric',ph:'reps'},km:{h:'km',im:'decimal',ph:'km'},tm:{h:'Thời gian',im:'numeric',ph:'0:00'}};
+const fCls=F=>F.length===1?'f1':F.includes('tm')?'f2t':'';
+/* ô nhập của 1 trường trong set; p = set tương ứng lần trước (để gợi ý mờ) */
+const fInp=(df,k,v,p,i,j)=>`<input data-f="${df}" data-k="${k}" data-i="${i}" data-j="${j}" inputmode="${FLD[k].im}" autocomplete="off" value="${esc(v)}" placeholder="${(p&&fv(k,p[k]))||FLD[k].ph}" aria-label="${FLD[k].h}">`;
 const R0=[
  ['Push',[1],[['bench',4],['incl-db',3],['ohp',3],['lat-raise',3],['pushdown',3],['oh-ext',2]]],
  ['Legs',[3],[['squat',4],['rdl',3],['legpress',3],['leg-curl',3],['leg-ext',3],['calf',4]]],
@@ -690,13 +739,37 @@ function loadD(id){let x=null;try{x=JSON.parse(localStorage.getItem(keyOf(id))||
 const initial=n=>{const w=String(n||'?').trim().split(/\s+/);return(w[w.length-1][0]||'?').toUpperCase()};
 const avatar=(p,big)=>`<span class="av${big?' big':''}" style="--c:${PC[p.color]||PC[0]};--t:${p.color===2||p.color===4?'#17191e':'#fff'}">${esc(initial(p.name))}</span>`;
 const exOf=id=>{if(!EXM)EXM=new Map(D.exercises.map(e=>[e.id,e]));return EXM.get(id)||{id,name:'(Bài tập đã xoá)',group:'Khác'}};
+const tyOf=e=>{const t=(e&&e.ty)||TY0[e&&e.id];return TYS[t]?t:'wr'};
+const tyId=id=>tyOf(exOf(id));
+const emp=v=>v==null||v==='';
+/* thời gian: chuỗi "m:ss" / "h:mm:ss" ⇄ số giây */
+const parseDur=v=>{if(typeof v==='number')return Math.max(0,Math.round(v));const s=String(v==null?'':v).trim();if(!s)return 0;
+ return Math.max(0,Math.round(s.split(':').reduce((a,x)=>a*60+num(x),0)))};
+/* gõ số kiểu đồng hồ lò vi sóng: 4 5 → 0:45, 1 3 0 → 1:30, 3 0 0 0 → 30:00 */
+const typeDur=v=>{const d=String(v||'').replace(/\D/g,'').replace(/^0+/,'').slice(-6);if(!d)return '';const x=d.padStart(3,'0'),ss=x.slice(-2),rest=x.slice(0,-2);
+ return rest.length>2?+rest.slice(0,-2)+':'+rest.slice(-2)+':'+ss:+rest+':'+ss};
+/* giá trị đã lưu (số) → chuỗi hiển thị trong ô nhập, và ngược lại */
+const fv=(k,v)=>emp(v)?'':k==='tm'?(+v?fmtClock(+v):''):typeof v==='number'?fx(v):String(v);
+const fparse=(k,v)=>k==='tm'?parseDur(v):k==='r'?Math.round(num(v)):Math.round(num(v)*100)/100;
+const fmtPace=s=>fmtClock(s)+'/km';
+/* 1 set → chữ, dựa vào trường có trong set nên dữ liệu cũ vẫn hiện đúng khi đổi cách ghi */
+const setTxt=s=>{const w=+s.w||0,r=+s.r||0,km=+s.km||0,tm=+s.tm||0;
+ if(km||tm)return [w?fx(w)+' kg':'',km?fx(km)+' km':'',tm?fmtClock(tm):''].filter(Boolean).join(' · ');
+ return w?fx(w)+' kg × '+r:r+' reps'};
+const setOk=(s,ty)=>ty==='wr'||ty==='r'?num(s.r)>0:ty==='dt'?num(s.km)>0||parseDur(s.tm)>0:parseDur(s.tm)>0;
+const needMsg=ty=>ty==='wr'||ty==='r'?'Nhập số reps trước đã':ty==='dt'?'Nhập quãng đường hoặc thời gian':'Nhập thời gian trước đã';
 
 /* ---------- stats ---------- */
 function exHistory(exId,excludeId,before){const out=[];for(const w of D.workouts){if(w.id===excludeId||(before&&w.start>=before))continue;
  let sets=null;for(const e of w.exercises)if(e.exId===exId)sets=(sets||[]).concat(e.sets);if(sets)out.push({w,sets})}return out}
-function best(sets){let mw=0,e1=0,sv=0,tv=0,mr=0,bs=null;for(const s of sets){if(s.t==='w')continue;const w=+s.w||0,r=+s.r||0;if(!r)continue;
- mw=Math.max(mw,w);const e=epley(w,r);if(!bs||e>e1){bs=s;e1=e}sv=Math.max(sv,w*r);tv+=w*r;mr=Math.max(mr,r)}
- return{mw,e1,sv,tv,mr,bs}}
+function best(sets){let mw=0,e1=0,sv=0,tv=0,mr=0,tr=0,bs=null,mt=0,tt=0,mk=0,tk=0,pc=0,bt=null;
+ for(const s of sets){if(s.t==='w')continue;const w=+s.w||0,r=+s.r||0,tm=+s.tm||0,km=+s.km||0;
+  /* set thời gian / quãng đường */
+  if(tm||km){mw=Math.max(mw,w);tt+=tm;tk+=km;if(km&&tm){const p=tm/km;if(!pc||p<pc)pc=p}
+   if(!bt||(km?km>mk||km===mk&&tm>mt:tm>mt||tm===mt&&w>(+bt.w||0)))bt=s;mt=Math.max(mt,tm);mk=Math.max(mk,km);continue}
+  if(!r)continue;
+  mw=Math.max(mw,w);const e=epley(w,r);if(!bs||e>e1){bs=s;e1=e}sv=Math.max(sv,w*r);tv+=w*r;mr=Math.max(mr,r);tr+=r}
+ return{mw,e1,sv,tv,mr,tr,bs,mt,tt,mk,tk,pc,bt,top:bs||bt}}
 const wVol=w=>w.exercises.reduce((a,e)=>a+best(e.sets).tv,0);
 const wSets=w=>w.exercises.reduce((a,e)=>a+e.sets.filter(s=>s.t!=='w').length,0);
 function computePRs(w){const prs=[];for(const e of w.exercises){const prev=exHistory(e.exId,w.id,w.start);if(!prev.length)continue;
@@ -704,7 +777,10 @@ function computePRs(w){const prs=[];for(const e of w.exercises){const prev=exHis
  if(n.mw>p.mw)prs.push({exId:e.exId,k:'Tạ nặng nhất',v:fx(n.mw)+' kg'});
  if(n.e1>p.e1+0.05&&n.mw>0)prs.push({exId:e.exId,k:'1RM ước tính',v:fx(r1(n.e1))+' kg'});
  if(n.sv>p.sv)prs.push({exId:e.exId,k:'Set volume tốt nhất',v:fmtNum(n.sv)+' kg'});
- if(n.mw===0&&p.mw===0&&n.mr>p.mr)prs.push({exId:e.exId,k:'Nhiều reps nhất',v:n.mr+' reps'});}
+ if(n.mw===0&&p.mw===0&&n.mr>p.mr)prs.push({exId:e.exId,k:'Nhiều reps nhất',v:n.mr+' reps'});
+ if(n.mt>p.mt&&p.mt>0)prs.push({exId:e.exId,k:'Thời gian lâu nhất',v:fmtClock(n.mt)});
+ if(n.mk>p.mk&&p.mk>0)prs.push({exId:e.exId,k:'Quãng đường xa nhất',v:fx(n.mk)+' km'});
+ if(n.pc&&p.pc&&n.pc<p.pc-.5)prs.push({exId:e.exId,k:'Pace nhanh nhất',v:fmtPace(n.pc)});}
  return prs}
 
 /* ---------- thư viện: bổ sung bài mới cho dữ liệu cũ ---------- */
@@ -742,7 +818,7 @@ function render(){
  postRender();tick();wake();
 }
 function postRender(){
- const ec=$('#exchart');if(ec){const m=MET[S.met];const pts=exHistory(S.exId).slice().reverse().map(x=>({x:x.w.start,y:m.f(best(x.sets))})).filter(p=>p.y>0);chart(ec,pts,m.u)}
+ const ec=$('#exchart');if(ec){const m=MET[S.met];const pts=exHistory(S.exId).slice().reverse().map(x=>({x:x.w.start,y:m.f(best(x.sets))})).filter(p=>p.y>0);chart(ec,pts,m.u,m.c)}
  const sb=$('#statbars');if(sb)bars(sb,statBuckets(),SM[S.sm||'vol']);
  const bc=$('#bodychart');if(bc){const m=BMK[S.bm]||BMK.kg;const pts=D.body.filter(b=>b[m.k]).sort((a,b)=>a.d-b.d).map(b=>({x:b.d,y:b[m.k]}));chart(bc,pts,m.u)}
 }
@@ -789,7 +865,7 @@ function wgPick(r){const ims=(r.images||[]).slice().sort((a,b)=>(b.is_main?1:0)-
 const autoRef=name=>{const n=norm(name.replace(/\(.*?\)/g,''));return REFS.find(r=>norm(r.replace(/_/g,' '))===n)||null};
 
 /* ---------- line chart (tap/drag to inspect) ---------- */
-function chart(el,pts,unit){if(!el||!pts.length)return;let hi=-1,X=null;
+function chart(el,pts,unit,fmt){if(!el||!pts.length)return;let hi=-1,X=null;
  const draw=()=>{const W=el.clientWidth,H=el.clientHeight;if(!W||!H)return;const P={l:44,r:16,t:18,b:26},n=pts.length;
   let x0=pts[0].x,x1=pts[n-1].x;if(x1===x0){x0-=864e5;x1+=864e5}
   let y0=Infinity,y1=-Infinity;pts.forEach(p=>{y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)});const pd=(y1-y0)*.2||Math.max(1,y1*.05);y0=Math.max(0,y0-pd);y1+=pd;
@@ -797,10 +873,10 @@ function chart(el,pts,unit){if(!el||!pts.length)return;let hi=-1,X=null;
   const ticks=[0,1,2,3].map(k=>y0+(y1-y0)*k/3),dec=(y1-y0)<6?1:0;
   const line=pts.map((p,i)=>(i?'L':'M')+X(p.x).toFixed(1)+' '+Y(p.y).toFixed(1)).join('');
   const area=line+'L'+X(pts[n-1].x).toFixed(1)+' '+(H-P.b)+'L'+X(pts[0].x).toFixed(1)+' '+(H-P.b)+'Z';
-  const s=pts[hi>=0?hi:n-1],sx=X(s.x),sy=Y(s.y),lab=fmtNum(s.y)+' '+unit+' · '+dm(s.x),lw=lab.length*7.2+18;
+  const s=pts[hi>=0?hi:n-1],sx=X(s.x),sy=Y(s.y),lab=(fmt?fmt(s.y):fmtNum(s.y)+' '+unit)+' · '+dm(s.x),lw=lab.length*7.2+18;
   const lx=Math.min(Math.max(sx-lw/2,P.l),W-P.r-lw),ly=sy-38<2?sy+12:sy-38,gid='g'+el.id;
   el.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Biểu đồ tiến độ"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--red)" stop-opacity=".3"/><stop offset="1" stop-color="var(--red)" stop-opacity="0"/></linearGradient></defs>
-  ${ticks.map(t=>`<line x1="${P.l}" x2="${W-P.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--line)"/><text x="${P.l-8}" y="${Y(t)+4}" text-anchor="end" font-size="12" fill="var(--mute)">${fmtNum(t,dec)}</text>`).join('')}
+  ${ticks.map(t=>`<line x1="${P.l}" x2="${W-P.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--line)"/><text x="${P.l-8}" y="${Y(t)+4}" text-anchor="end" font-size="12" fill="var(--mute)">${fmt?fmt(t).replace('/km',''):fmtNum(t,dec)}</text>`).join('')}
   <text x="${P.l}" y="${H-7}" font-size="12" fill="var(--mute)">${dm(pts[0].x)}</text><text x="${W-P.r}" y="${H-7}" font-size="12" fill="var(--mute)" text-anchor="end">${dm(pts[n-1].x)}</text>
   <path d="${area}" fill="url(#${gid})"/><path d="${line}" fill="none" stroke="var(--red)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
   ${n<=40?pts.map(p=>`<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="3.2" fill="var(--card)" stroke="var(--red)" stroke-width="2"/>`).join(''):''}
@@ -822,7 +898,7 @@ function vHome(){
  if(embed)hint=`<div class="hint"><p>Bản xem thử trong Claude: dữ liệu ở đây có thể không được giữ lại. Dùng thật thì cài bản chính lên iPhone.</p></div>`;
  else if(!standalone&&!D.settings.hintOff)hint=`<div class="hint"><p>Dùng như app: trong Safari bấm nút <b>Chia sẻ</b> → <b>Thêm vào MH chính</b>, rồi luôn mở từ biểu tượng đó (dữ liệu của tab Safari và của app là tách riêng).</p><button class="icon" data-act="hint-off" aria-label="Ẩn">${ICON.x}</button></div>`;
  const tr0=todays[0];
- const hero=tr0?`<div class="hero"><small>Hôm nay · ${DAYF[today]}</small><h3>${esc(tr0.name)}</h3><p>${tr0.items.map(it=>esc(exOf(it.exId).name.replace(/\s*\(.*\)/,''))).join(' · ')}</p><button class="btn red block" data-act="start-routine" data-id="${tr0.id}">Bắt đầu ${esc(tr0.name)}</button><button class="btn alt block" data-act="start-empty">Buổi trống</button></div>`
+ const hero=tr0?`<div class="hero"><div class="hero-h"><small>Hôm nay · ${DAYF[today]}</small><button class="link" data-act="r-edit" data-id="${tr0.id}" aria-label="Sửa routine ${esc(tr0.name)}">${ICON.edit} Sửa</button></div><h3>${esc(tr0.name)}</h3><p>${tr0.items.map(it=>esc(exOf(it.exId).name.replace(/\s*\(.*\)/,''))).join(' · ')}</p><button class="btn red block" data-act="start-routine" data-id="${tr0.id}">Bắt đầu ${esc(tr0.name)}</button><button class="btn alt block" data-act="start-empty">Buổi trống</button></div>`
  :`<div class="hero"><small>Hôm nay · ${DAYF[today]}</small><h3>Ngày tự do</h3><p>Không có routine nào xếp cho hôm nay.</p><button class="btn red block" data-act="start-empty">Bắt đầu buổi trống</button></div>`;
  const rcard=r=>`<div class="card rc"><div class="rc-h"><b>${esc(r.name)}</b><span class="days">${(r.days||[]).slice().sort((a,b)=>((a+6)%7)-((b+6)%7)).map(d=>DAY[d]).join(' ')}</span><button class="icon" data-act="r-edit" data-id="${r.id}" aria-label="Sửa routine">${ICON.dots}</button></div><p>${r.items.length} bài · ${r.items.reduce((a,i)=>a+i.sets,0)} set — ${r.items.slice(0,4).map(it=>esc(exOf(it.exId).name.replace(/\s*\(.*\)/,''))).join(', ')}${r.items.length>4?'…':''}</p><button class="btn block" data-act="start-routine" data-id="${r.id}">Bắt đầu</button></div>`;
  return hdr(multi()?curP().name:'GGym',avBtn(),`<button class="icon" data-act="settings" aria-label="Cài đặt">${ICON.cog}</button>`)+hint+
@@ -832,16 +908,17 @@ function vHome(){
 }
 
 /* ---------- views: workout ---------- */
-const blank=()=>({w:'',r:'',done:false,t:'n'});
+const blank=()=>({w:'',r:'',km:'',tm:'',done:false,t:'n'});
 const prevOf=e=>{const a=D.active;return((exHistory(e.exId,a.editId,a.start)[0])||{}).sets||[]};
 function wkTotals(){let v=0,n=0;D.active.exercises.forEach(e=>e.sets.forEach(s=>{if(s.done&&s.t!=='w'){v+=num(s.w)*num(s.r);n++}}));return{v,n}}
 function vWorkout(){
  const a=D.active,t=wkTotals();
  const exs=a.exercises.map((e,i)=>{const prev=prevOf(e),ex=exOf(e.exId);let n=0;
+  const F=TYS[tyOf(ex)].f,fc=fCls(F);
   const rows=e.sets.map((s,j)=>{const p=prev[j];const lab=s.t==='w'?'K':String(++n);
-   return `<div class="row ${s.done?'done':''}"><button class="setno ${s.t==='w'?'wu':''}" data-act="setmenu" data-i="${i}" data-j="${j}" aria-label="Tuỳ chọn set">${lab}</button><span class="prev">${p?fx(p.w)+' × '+p.r:'—'}</span><input data-f="w" data-i="${i}" data-j="${j}" inputmode="decimal" autocomplete="off" value="${esc(s.w)}" placeholder="${p?fx(p.w):'kg'}" aria-label="kg"><input data-f="r" data-i="${i}" data-j="${j}" inputmode="numeric" autocomplete="off" value="${esc(s.r)}" placeholder="${p?p.r:'reps'}" aria-label="reps"><button class="chk" data-act="check" data-i="${i}" data-j="${j}" aria-label="Xong set">${ICON.check}</button></div>`}).join('');
+   return `<div class="swr"><button class="swdel" data-act="setdel" data-i="${i}" data-j="${j}" tabindex="-1">Xoá</button><div class="row ${fc} ${s.done?'done':''}" data-sw="1"><button class="setno ${s.t==='w'?'wu':''}" data-act="setmenu" data-i="${i}" data-j="${j}" aria-label="Tuỳ chọn set">${lab}</button><span class="prev">${p?setTxt(p):'—'}</span>${F.map(k=>fInp('sv',k,s[k],p,i,j)).join('')}<button class="chk" data-act="check" data-i="${i}" data-j="${j}" aria-label="Xong set">${ICON.check}</button></div></div>`}).join('');
   const rest=D.restBy[e.exId]!=null?D.restBy[e.exId]:D.settings.rest;
-  return `<section class="card ex"><div class="ex-h"><button class="exth" data-act="exinfo" data-id="${e.exId}" aria-label="Xem cách tập">${thumb(ex)}</button><button class="ex-name" data-act="exinfo" data-id="${e.exId}">${esc(ex.name)}</button><button class="icon" data-act="exmenu" data-i="${i}" aria-label="Tuỳ chọn bài tập">${ICON.dots}</button></div><div class="ex-sub">${esc(ex.group)} · Nghỉ ${rest?fmtClock(rest):'tắt'}</div><div class="row hd"><span>Set</span><span>Lần trước</span><span>kg</span><span>Reps</span><span></span></div>${rows}<button class="btn ghost block" data-act="addset" data-i="${i}">+ Thêm set</button></section>`}).join('');
+  return `<section class="card ex"><div class="ex-h" data-lp="w"><button class="exth" data-act="exinfo" data-id="${e.exId}" aria-label="Xem cách tập">${thumb(ex)}</button><button class="ex-name" data-act="exinfo" data-id="${e.exId}">${esc(ex.name)}</button><button class="icon" data-act="exmenu" data-i="${i}" aria-label="Tuỳ chọn bài tập">${ICON.dots}</button></div><div class="ex-sub">${esc(ex.group)} · Nghỉ ${rest?fmtClock(rest):'tắt'}</div><div class="row hd ${fc}"><span>Set</span><span>Lần trước</span>${F.map(k=>`<span>${FLD[k].h}</span>`).join('')}<span></span></div>${rows}<button class="btn ghost block" data-act="addset" data-i="${i}">+ Thêm set</button></section>`}).join('');
  return `<header class="top wk"><button class="icon" data-act="minimize" aria-label="Thu nhỏ">${ICON.down}</button><div class="wk-t"><b class="elapsed">0:00</b><small>${a.editId?'Đang sửa buổi cũ':multi()?esc(curP().name):'Thời gian'}</small></div><button class="btn red sm" data-act="finish">${a.editId?'Lưu':'Kết thúc'}</button></header>
  <input class="wk-name" data-f="wname" value="${esc(a.name)}" aria-label="Tên buổi tập" autocomplete="off">
  <div class="wk-stats"><span><b id="wk-vol">${fmtVol(t.v)}</b> kg volume</span><span><b id="wk-sets">${t.n}</b> set xong</span></div>
@@ -864,7 +941,7 @@ function vHistory(){
  let list='',mon='';
  for(const w of ws){const d=new Date(w.start),k=d.getFullYear()+'-'+d.getMonth();if(k!==mon){mon=k;list+=`<p class="mon">Tháng ${d.getMonth()+1}, ${d.getFullYear()}</p>`}
   const prs=(w.prs||[]).length;
-  list+=`<div class="card wc" data-act="wopen" data-id="${w.id}" role="button" tabindex="0"><div class="wc-h"><b>${esc(w.name)}</b><span>${fmtDate(w.start)} · ${hm(w.start)}</span></div><div class="wc-m"><span>${fmtMin(w.end-w.start)}</span><span>${fmtVol(wVol(w))} kg</span><span>${wSets(w)} set</span>${prs?`<span class="pr">${prs} kỷ lục</span>`:''}</div><ul>${w.exercises.slice(0,5).map(e=>{const bb=best(e.sets).bs;return `<li><span>${e.sets.filter(s=>s.t!=='w').length} × ${esc(exOf(e.exId).name)}</span><small>${bb?fx(bb.w)+' kg × '+bb.r:''}</small></li>`}).join('')}${w.exercises.length>5?`<li><small>+${w.exercises.length-5} bài khác</small></li>`:''}</ul></div>`}
+  list+=`<div class="card wc" data-act="wopen" data-id="${w.id}" role="button" tabindex="0"><div class="wc-h"><b>${esc(w.name)}</b><span>${fmtDate(w.start)} · ${hm(w.start)}</span></div><div class="wc-m"><span>${fmtMin(w.end-w.start)}</span><span>${fmtVol(wVol(w))} kg</span><span>${wSets(w)} set</span>${prs?`<span class="pr">${prs} kỷ lục</span>`:''}</div><ul>${w.exercises.slice(0,5).map(e=>{const bb=best(e.sets).top;return `<li><span>${e.sets.filter(s=>s.t!=='w').length} × ${esc(exOf(e.exId).name)}</span><small>${bb?setTxt(bb):''}</small></li>`}).join('')}${w.exercises.length>5?`<li><small>+${w.exercises.length-5} bài khác</small></li>`:''}</ul></div>`}
  return hdr('Lịch sử',avBtn())+histSeg()+`<div class="card"><div class="heat" aria-label="16 tuần gần nhất">${cells}</div></div><div class="tiles t3" style="margin-top:8px"><div><b>${ws.length}</b><span>tổng số buổi</span></div><div><b>${m30}</b><span>buổi / 30 ngày</span></div><div><b>${streak}</b><span>tuần liên tiếp</span></div></div>`+
  (list||`<p class="empty">Chưa có buổi tập nào.<br>Bắt đầu ở tab Tập, hoặc nhập lịch sử từ Hevy trong Cài đặt.</p>`);
 }
@@ -877,7 +954,7 @@ const SM={vol:{l:'Volume',f:wVol,u:v=>fmtVol(v)+' kg',t:v=>v>=1000?fx(r1(v/1000)
  sets:{l:'Set',f:wSets,u:v=>v+' set',t:v=>String(Math.round(v))},
  n:{l:'Buổi',f:()=>1,u:v=>v+' buổi',t:v=>String(Math.round(v))}};
 const SP={30:'30 ngày',90:'3 tháng',365:'1 năm'};
-function groupSets(ws){const m={};for(const w of ws)for(const e of w.exercises){const g=exOf(e.exId).group;for(const s of e.sets)if(s.t!=='w')m[g]=(m[g]||0)+1}return m}
+function groupSets(ws){const m={};for(const w of ws)for(const e of w.exercises){const g=exOf(e.exId).group;if(g==='Cardio')continue;for(const s of e.sets)if(s.t!=='w')m[g]=(m[g]||0)+1}return m}
 function statBuckets(){const sp=S.sp||30,now=new Date(),out=[];
  if(sp===365){for(let i=11;i>=0;i--){const a=new Date(now.getFullYear(),now.getMonth()-i,1),b=new Date(a.getFullYear(),a.getMonth()+1,1);out.push({a:+a,b:+b,l:String(a.getMonth()+1),k:i?'Tháng '+(a.getMonth()+1)+'/'+a.getFullYear():'Tháng này'})}}
  else{const n=sp===30?6:13,w0=startOfWeek(now);for(let i=n-1;i>=0;i--){const a=new Date(w0);a.setDate(a.getDate()-7*i);const b=new Date(a);b.setDate(b.getDate()+7);out.push({a:+a,b:+b,l:dm(+a),k:i?'Tuần '+dm(+a)+' – '+dm(+b-864e5):'Tuần này'})}}
@@ -928,11 +1005,11 @@ function vStats(){
 }
 
 /* ---------- views: exercises ---------- */
-function usage(){const m={};for(const w of D.workouts)for(const e of w.exercises){const u=m[e.exId]||(m[e.exId]={n:0,mw:0,last:0});u.n++;u.last=Math.max(u.last,w.start);for(const s of e.sets)if(s.t!=='w')u.mw=Math.max(u.mw,+s.w||0)}return m}
+function usage(){const m={};for(const w of D.workouts)for(const e of w.exercises){const u=m[e.exId]||(m[e.exId]={n:0,mw:0,mt:0,mk:0,last:0});u.n++;u.last=Math.max(u.last,w.start);for(const s of e.sets)if(s.t!=='w'){u.mw=Math.max(u.mw,+s.w||0);u.mt=Math.max(u.mt,+s.tm||0);u.mk=Math.max(u.mk,+s.km||0)}}return m}
 function exListHtml(){const q=norm(S.q),u=usage();
  const list=D.exercises.filter(e=>(!S.grp||e.group===S.grp)&&(!q||norm(e.name).includes(q)||norm(e.group).includes(q)))
   .sort((a,b)=>((u[b.id]||{}).n||0)-((u[a.id]||{}).n||0)||a.name.localeCompare(b.name));
- return list.map(e=>{const x=u[e.id];return `<div class="li" data-act="exopen" data-id="${e.id}" role="button" tabindex="0"><div class="lim">${thumb(e)}<div><b>${esc(e.name)}</b><small>${esc(e.group)}${x?' · '+x.n+' buổi':''}</small></div></div><span class="pv">${x&&x.mw?fx(x.mw)+' kg':''}</span></div>`}).join('')||'<p class="empty">Không tìm thấy bài tập.</p>'}
+ return list.map(e=>{const x=u[e.id];return `<div class="li" data-act="exopen" data-id="${e.id}" role="button" tabindex="0"><div class="lim">${thumb(e)}<div><b>${esc(e.name)}</b><small>${esc(e.group)}${x?' · '+x.n+' buổi':''}</small></div></div><span class="pv">${!x?'':x.mk?fx(x.mk)+' km':x.mw?fx(x.mw)+' kg':x.mt?fmtClock(x.mt):''}</span></div>`}).join('')||'<p class="empty">Không tìm thấy bài tập.</p>'}
 /* ---------- map bài tập: bài đã tập nhưng không phải bài có sẵn (nhập từ Hevy / tự tạo / đã xoá) ---------- */
 const SYN={db:'dumbbell',dumbbells:'dumbbell',bb:'barbell',kb:'kettlebell',ohp:'overhead press',rdl:'romanian deadlift',sldl:'stiff leg deadlift',
  triceps:'tricep',biceps:'bicep',rows:'row',raises:'raise',curls:'curl',extensions:'extension',presses:'press',flyes:'fly',flys:'fly',flies:'fly',
@@ -979,19 +1056,30 @@ function mergeEx(from,to){const t=Date.now();
 function vExList(){const mp=mapList(),mn=mp.custom.length+mp.gone.length;return hdr('Bài tập',avBtn(),`<button class="icon" data-act="newex" aria-label="Bài tập mới">+</button>`)+
  (mn?`<button class="hint maph" data-act="map-open"><p><b>${mn} bài đã tập chưa có trong thư viện gốc</b><br>Xem bài gần giống và gộp lại</p><span aria-hidden="true">›</span></button>`:'')+
  `<input class="search" type="search" data-f="exq" value="${esc(S.q)}" placeholder="Tìm bài tập…" autocomplete="off"><div class="chips scroll">${['Tất cả'].concat(GROUPS).map(g=>`<button class="chip ${(S.grp||'Tất cả')===g?'on':''}" data-act="grp" data-g="${g}">${g}</button>`).join('')}</div><div id="exlist">${exListHtml()}</div>`}
-const MET={e1:{l:'1RM',f:b=>b.e1,u:'kg'},mw:{l:'Tạ max',f:b=>b.mw,u:'kg'},tv:{l:'Volume',f:b=>b.tv,u:'kg'},mr:{l:'Reps',f:b=>b.mr,u:'reps'}};
-const sessHtml=x=>`<div class="sess"><b>${fmtDate(x.w.start)} · ${esc(x.w.name)}</b><p>${x.sets.map(s=>`${s.t==='w'?'<span class="wu">K</span> ':''}${fx(s.w)}×${s.r}`).join('  ·  ')}</p></div>`;
+const MET={e1:{l:'1RM',f:b=>b.e1,u:'kg'},mw:{l:'Tạ max',f:b=>b.mw,u:'kg'},tv:{l:'Volume',f:b=>b.tv,u:'kg'},mr:{l:'Reps',f:b=>b.mr,u:'reps'},tr:{l:'Tổng reps',f:b=>b.tr,u:'reps'},
+ mt:{l:'Lâu nhất',f:b=>b.mt,c:fmtClock},tt:{l:'Tổng thời gian',f:b=>b.tt,c:fmtClock},mk:{l:'Quãng đường',f:b=>b.mk,u:'km'},pc:{l:'Pace',f:b=>b.pc,c:fmtPace}};
+const METS={wr:['e1','mw','tv','mr'],r:['mr','tr'],t:['mt','tt'],wt:['mw','mt'],dt:['mk','mt','pc']};
+/* các ô số liệu đầu trang bài tập, theo cách ghi của bài */
+function exTiles(ty,b,n){const d=(v,f)=>v?f(v):'—';const T={
+ wr:[[b.mw?fx(b.mw):'—','Tạ nặng nhất (kg)'],[b.e1&&b.mw?fx(r1(b.e1)):'—','1RM ước tính (kg)'],[b.bs?(+b.bs.w?fx(b.bs.w)+'×'+b.bs.r:b.bs.r+' reps'):'—','Set tốt nhất']],
+ r:[[d(b.mr,String),'Reps nhiều nhất / set'],[d(b.tr,String),'Tổng reps']],
+ t:[[d(b.mt,fmtClock),'Lâu nhất / set'],[d(b.tt,fmtClock),'Tổng thời gian']],
+ wt:[[d(b.mw,fx),'Tạ nặng nhất (kg)'],[d(b.mt,fmtClock),'Lâu nhất / set']],
+ dt:[[d(b.mk,fx),'Xa nhất (km)'],[d(b.mt,fmtClock),'Lâu nhất'],[d(b.pc,fmtPace),'Pace tốt nhất']]}[ty];
+ if(n!=null)T.push([String(n),'Số buổi đã tập']);
+ return `<div class="tiles${T.length===3?' t3':''}">${T.map(([v,l])=>`<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>`}
+const sessHtml=x=>`<div class="sess"><b>${fmtDate(x.w.start)} · ${esc(x.w.name)}</b><p>${x.sets.map(s=>`${s.t==='w'?'<span class="wu">K</span> ':''}${setTxt(s).replace(' kg × ','×')}`).join('  ·  ')}</p></div>`;
 function vExDetail(){
- const e=exOf(S.exId),h=exHistory(e.id),all=h.flatMap(x=>x.sets),b=best(all);
- if(!S.met)S.met=b.mw>0||!all.length?'e1':'mr';
- const recs=[1,2,3,5,8,10,12,15].map(r=>[r,Math.max(0,...all.filter(s=>s.t!=='w'&&+s.r>=r).map(s=>+s.w||0))]).filter(x=>x[1]>0);
+ const e=exOf(S.exId),ty=tyOf(e),h=exHistory(e.id),all=h.flatMap(x=>x.sets),b=best(all),ms=METS[ty];
+ if(!ms.includes(S.met))S.met=ty==='wr'?(b.mw>0||!all.length?'e1':'mr'):ms[0];
+ const recs=ty!=='wr'?[]:[1,2,3,5,8,10,12,15].map(r=>[r,Math.max(0,...all.filter(s=>s.t!=='w'&&+s.r>=r).map(s=>+s.w||0))]).filter(x=>x[1]>0);
  return hdr(e.name,`<button class="icon" data-act="exback" aria-label="Quay lại">${ICON.back}</button>`,`<button class="icon" data-act="exedit" aria-label="Sửa bài tập">${ICON.dots}</button>`,true)+
- `<p class="mute small" style="margin:-6px 0 12px 50px">${esc(e.group)}</p>${demoHtml(e)}<div style="height:14px"></div>
- <div class="tiles"><div><b>${b.mw?fx(b.mw):'—'}</b><span>Tạ nặng nhất (kg)</span></div><div><b>${b.e1&&b.mw?fx(r1(b.e1)):'—'}</b><span>1RM ước tính (kg)</span></div><div><b>${b.bs?fx(b.bs.w)+'×'+b.bs.r:'—'}</b><span>Set tốt nhất</span></div><div><b>${h.length}</b><span>Số buổi đã tập</span></div></div>
- <div class="seg">${Object.keys(MET).map(k=>`<button class="${S.met===k?'on':''}" data-act="met" data-k="${k}">${MET[k].l}</button>`).join('')}</div>
+ `<p class="mute small" style="margin:-6px 0 12px 50px">${esc(e.group)} · ${TYS[ty].l}</p>${demoHtml(e)}<div style="height:14px"></div>
+ ${exTiles(ty,b,h.length)}
+ <div class="seg">${ms.map(k=>`<button class="${S.met===k?'on':''}" data-act="met" data-k="${k}">${MET[k].l}</button>`).join('')}</div>
  ${h.length>=2?`<div class="fig" id="exchart"></div>`:`<p class="empty card">Cần ít nhất 2 buổi để vẽ biểu đồ tiến bộ.</p>`}
  ${recs.length?`<h2>Kỷ lục theo số reps</h2><p class="mute small" style="margin:0 0 8px">Mức tạ nặng nhất bạn đã làm được với ít nhất ngần ấy reps.</p><table class="rec">${recs.map(([r,w])=>`<tr><td>${r} rep${r>1?'s':''}</td><td>${fx(w)} kg</td></tr>`).join('')}</table>`:''}
- <h2>Lịch sử</h2>${h.map(sessHtml).join('')||'<p class="empty">Chưa tập bài này.</p>'}`;
+ <h2>Lịch sử</h2>${h.slice(0,S.hAll?h.length:5).map(sessHtml).join('')||'<p class="empty">Chưa tập bài này.</p>'}${h.length>5?`<button class="btn block" data-act="h-all" style="margin-top:10px">${S.hAll?'Thu gọn':'Xem tất cả '+h.length+' buổi'}</button>`:''}`;
 }
 
 /* ---------- views: body ---------- */
@@ -1086,17 +1174,19 @@ function vBody(){
 /* routine: mỗi bài có plan = danh sách set {w,r,t}; sets (số set) giữ để tương thích dữ liệu cũ */
 const rset=()=>({w:'',r:'',t:'n'});
 const planOf=it=>it.plan&&it.plan.length?it.plan:Array.from({length:it.sets||3},rset);
-const planFromSets=sets=>sets.map(s=>({w:num(s.w)>0?Math.round(num(s.w)*100)/100:'',r:Math.round(num(s.r))>0?Math.round(num(s.r)):'',t:s.t==='w'?'w':'n'}));
-const planStr=v=>v===''||v==null?'':typeof v==='number'?fx(v):String(v);
+/* set đã lưu (số) → mục tiêu trong routine (số); chuỗi đang sửa cũng nhận được (thời gian "1:30") */
+const planFromSets=sets=>sets.map(s=>{const o={t:s.t==='w'?'w':'n'};for(const k of FK){const v=emp(s[k])?0:fparse(k,s[k]);o[k]=v>0?v:''}return o});
+/* mục tiêu (số) → chuỗi trong ô nhập */
+const planEdit=p=>{const o={t:p.t==='w'?'w':'n'};for(const k of FK)o[k]=fv(k,p[k]);return o};
 function vRoutine(){const r=S.draft;
- const card=(it,i)=>{const ex=exOf(it.exId),prev=((exHistory(it.exId)[0])||{}).sets||[];let n=0;
+ const card=(it,i)=>{const ex=exOf(it.exId),prev=((exHistory(it.exId)[0])||{}).sets||[],F=TYS[tyOf(ex)].f,fc=fCls(F);let n=0;
   const rows=it.plan.map((p,j)=>{const q=prev[j],lab=p.t==='w'?'K':String(++n);
-   return `<div class="row rrow"><button class="setno ${p.t==='w'?'wu':''}" data-act="r-stype" data-i="${i}" data-j="${j}" aria-label="${p.t==='w'?'Đổi thành set thường':'Đánh dấu set khởi động'}">${lab}</button><input data-f="rw" data-i="${i}" data-j="${j}" inputmode="decimal" autocomplete="off" value="${esc(p.w)}" placeholder="${q?fx(q.w):'kg'}" aria-label="kg"><input data-f="rr" data-i="${i}" data-j="${j}" inputmode="numeric" autocomplete="off" value="${esc(p.r)}" placeholder="${q?q.r:'reps'}" aria-label="reps"><button class="icon" data-act="r-sdel" data-i="${i}" data-j="${j}" ${it.plan.length>1?'':'disabled'} aria-label="Xoá set">${ICON.x}</button></div>`}).join('');
-  return `<section class="card ex"><div class="ex-h"><button class="exth" data-act="exinfo" data-id="${it.exId}" aria-label="Xem cách tập">${thumb(ex)}</button><button class="ex-name" data-act="exinfo" data-id="${it.exId}">${esc(ex.name)}</button><button class="icon" data-act="r-move" data-i="${i}" data-d="-1" ${i?'':'disabled'} aria-label="Lên">↑</button><button class="icon" data-act="r-move" data-i="${i}" data-d="1" ${i<r.items.length-1?'':'disabled'} aria-label="Xuống">↓</button><button class="icon danger" data-act="r-del" data-i="${i}" aria-label="Bỏ bài này">${ICON.x}</button></div><div class="ex-sub">${esc(ex.group)} · ${it.plan.length} set</div><div class="row rrow hd"><span>Set</span><span>kg</span><span>Reps</span><span></span></div>${rows}<button class="btn ghost block" data-act="r-sadd" data-i="${i}">+ Thêm set</button></section>`};
+   return `<div class="swr"><button class="swdel" data-act="r-sdel" data-i="${i}" data-j="${j}" tabindex="-1">Xoá</button><div class="row rrow ${fc}" data-sw="1"><button class="setno ${p.t==='w'?'wu':''}" data-act="r-stype" data-i="${i}" data-j="${j}" aria-label="${p.t==='w'?'Đổi thành set thường':'Đánh dấu set khởi động'}">${lab}</button>${F.map(k=>fInp('pv',k,p[k],q,i,j)).join('')}<button class="icon" data-act="r-sdel" data-i="${i}" data-j="${j}" ${it.plan.length>1?'':'disabled'} aria-label="Xoá set">${ICON.x}</button></div></div>`}).join('');
+  return `<section class="card ex"><div class="ex-h" data-lp="r"><button class="exth" data-act="exinfo" data-id="${it.exId}" aria-label="Xem cách tập">${thumb(ex)}</button><button class="ex-name" data-act="exinfo" data-id="${it.exId}">${esc(ex.name)}</button><button class="icon danger" data-act="r-del" data-i="${i}" aria-label="Bỏ bài này">${ICON.x}</button></div><div class="ex-sub">${esc(ex.group)} · ${it.plan.length} set</div><div class="row rrow hd ${fc}"><span>Set</span>${F.map(k=>`<span>${FLD[k].h}</span>`).join('')}<span></span></div>${rows}<button class="btn ghost block" data-act="r-sadd" data-i="${i}">+ Thêm set</button></section>`};
  return hdr(r.id?'Sửa routine':'Routine mới',`<button class="link" data-act="r-cancel">Huỷ</button>`,`<button class="link strong" data-act="r-save">Lưu</button>`,true)+
  `<input class="field big" data-f="rname" value="${esc(r.name)}" placeholder="Tên routine, ví dụ: Push" autocomplete="off">
  <p class="lbl">Ngày tập trong tuần</p><div class="chips">${[1,2,3,4,5,6,0].map(d=>`<button class="chip ${r.days.includes(d)?'on':''}" data-act="r-day" data-d="${d}">${DAY[d]}</button>`).join('')}</div>
- <p class="lbl">Bài tập</p><p class="mute small" style="margin:-4px 0 0">kg / reps nhập ở đây sẽ điền sẵn khi bắt đầu buổi tập. Ô để trống: số mờ là kết quả lần tập trước. Chạm số thứ tự set để đổi thành set khởi động (K).</p>${r.items.map(card).join('')||'<p class="empty card">Chưa có bài tập.</p>'}
+ <div class="lblr"><p class="lbl">Bài tập</p>${r.items.length>1?`<button class="link strong" data-act="ro-open" data-k="r">${ICON.grip} Sắp xếp</button>`:''}</div><p class="mute small" style="margin:-4px 0 0">Số nhập ở đây sẽ điền sẵn khi bắt đầu buổi tập. Ô để trống: số mờ là kết quả lần tập trước. Chạm số thứ tự set để đổi thành set khởi động (K). Vuốt set sang trái để xoá; giữ tên bài để kéo đổi thứ tự.</p>${r.items.map(card).join('')||'<p class="empty card">Chưa có bài tập.</p>'}
  <button class="btn red block" data-act="r-add">+ Thêm bài tập</button>${r.id?`<button class="btn block danger" style="background:none" data-act="r-remove">Xoá routine</button>`:''}`}
 /* ---------- sheet / toast ---------- */
 function sheet(html,cls=''){const s=$('#sheet');s.innerHTML=`<div class="bd" data-act="close"></div><div class="panel ${cls}" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div>`;s.classList.add('open')}
@@ -1111,18 +1201,21 @@ function pickList(){const q=norm(S.pq),u=usage();const ok=e=>!q||norm(e.name).in
  for(const g of GROUPS){const l=D.exercises.filter(e=>e.group===g&&ok(e)).sort((a,b)=>a.name.localeCompare(b.name));if(l.length)h+=`<p class="pg">${g}</p>`+l.map(item).join('')}
  return h||'<p class="empty">Không thấy — tạo bài tập mới bên dưới.</p>'}
 function openPicker(cb,title='Thêm bài tập'){S.pick=cb;S.pq='';sheet(`<h3>${title}</h3><input class="search" type="search" data-f="pickq" placeholder="Tìm bài tập…" autocomplete="off"><div id="picklist" class="plist">${pickList()}</div><button class="btn ghost block" data-act="newex" data-p="1">+ Tạo bài tập mới</button>`,'tall')}
-function exSheet(e,fromPick){S.nxg=e?e.group:'Khác';
- sheet(`<h3>${e?'Sửa bài tập':'Bài tập mới'}</h3><input id="nx-name" class="field" value="${e?esc(e.name):''}" placeholder="Tên, ví dụ: Cable Lateral Raise" autocomplete="off"><p class="lbl">Nhóm cơ</p><div class="chips" id="nx-g">${GROUPS.map(g=>`<button class="chip ${g===S.nxg?'on':''}" data-act="nxg" data-g="${g}">${g}</button>`).join('')}</div><button class="btn red block" data-act="nx-save" data-id="${e?e.id:''}" data-p="${fromPick?1:''}">Lưu</button>${e?`<button class="btn block" data-act="ref-pick" data-id="${e.id}">${e.ref||e.wg||LOCAL.has(e.id)?'Đổi':'Chọn'} hình / video minh hoạ</button>`:''}${e?`<button class="btn block danger" style="background:none" data-act="ex-remove" data-id="${e.id}">Xoá bài tập</button>`:''}`)}
+function exSheet(e,fromPick){S.nxg=e?e.group:'Khác';S.nxt=e?tyOf(e):'wr';const used=e&&usage()[e.id];
+ sheet(`<h3>${e?'Sửa bài tập':'Bài tập mới'}</h3><input id="nx-name" class="field" value="${e?esc(e.name):''}" placeholder="Tên, ví dụ: Cable Lateral Raise" autocomplete="off"><p class="lbl">Nhóm cơ</p><div class="chips" id="nx-g">${GROUPS.map(g=>`<button class="chip ${g===S.nxg?'on':''}" data-act="nxg" data-g="${g}">${g}</button>`).join('')}</div>
+ <p class="lbl">Cách ghi set</p><div class="chips" id="nx-t">${Object.keys(TYS).map(k=>`<button class="chip ${k===S.nxt?'on':''}" data-act="nxt" data-t="${k}">${TYS[k].l}</button>`).join('')}</div><p class="mute small" id="nx-tx" style="margin:8px 2px 4px"><span>Ví dụ: ${TYS[S.nxt].x}</span>${used?' Đổi cách ghi không chuyển đổi các set đã lưu.':''}</p><button class="btn red block" data-act="nx-save" data-id="${e?e.id:''}" data-p="${fromPick?1:''}">Lưu</button>${e?`<button class="btn block" data-act="ref-pick" data-id="${e.id}">${e.ref||e.wg||LOCAL.has(e.id)?'Đổi':'Chọn'} hình / video minh hoạ</button>`:''}${e?`<button class="btn block danger" style="background:none" data-act="ex-remove" data-id="${e.id}">Xoá bài tập</button>`:''}`)}
 
 /* ---------- workout actions ---------- */
 function begin(o){const go=()=>{D.active=Object.assign({id:uid(),start:Date.now(),restEnd:0,restDur:0,name:'Buổi tập',exercises:[]},o);save();S.view='workout';closeSheet();render();scrollTo(0,0)};
  if(D.active)confirmSheet('Đang có một buổi tập dở. Bỏ buổi đó và bắt đầu buổi mới?','Bỏ và bắt đầu mới',go);else go()}
 function partOfDay(){const h=new Date().getHours();return h<11?'sáng':h<14?'trưa':h<18?'chiều':'tối'}
 function startRest(sec){if(!sec)return;const a=D.active;a.restDur=sec;a.restEnd=Date.now()+sec*1000;restTick()}
+/* set đang tập (chuỗi) → set lưu (số), chỉ giữ các trường của cách ghi; bài chỉ reps lưu w = 0 */
+function packSet(s,ty){const o={t:s.t==='w'?'w':'n'};for(const k of TYS[ty].f)o[k]=emp(s[k])?0:fparse(k,s[k]);if(ty==='r')o.w=0;return o}
 function doFinish(){
  const a=D.active;
  const w={id:a.editId||uid(),u:Date.now(),name:(a.name||'').trim()||'Buổi tập',start:a.start,end:a.editId?a.end:Date.now(),routineId:a.routineId||null,
-  exercises:a.exercises.map(e=>({exId:e.exId,sets:e.sets.filter(s=>s.done).map(s=>({w:num(s.w),r:Math.round(num(s.r)),t:s.t==='w'?'w':'n'}))})).filter(e=>e.sets.length)};
+  exercises:a.exercises.map(e=>({exId:e.exId,sets:e.sets.filter(s=>s.done).map(s=>packSet(s,tyId(e.exId)))})).filter(e=>e.sets.length)};
  w.prs=computePRs(w);
  D.workouts=D.workouts.filter(x=>x.id!==w.id);D.workouts.push(w);D.workouts.sort((x,y)=>y.start-x.start);
  D.active=null;save();S.view=null;S.tab='history';render();scrollTo(0,0);summary(w);
@@ -1135,7 +1228,7 @@ function wDetail(w){
  sheet(`<h3>${esc(w.name)}</h3><p class="mute" style="margin-top:-6px">${DAYF[new Date(w.start).getDay()]}, ${dm(w.start)}/${new Date(w.start).getFullYear()} · ${hm(w.start)} · ${fmtMin(w.end-w.start)} · ${fmtVol(wVol(w))} kg</p>
  ${(w.prs||[]).length?`<ul class="prs">${w.prs.map(p=>`<li><i class="medal"></i><span>${esc(exOf(p.exId).name)}</span><small>${p.k}</small><b>${p.v}</b></li>`).join('')}</ul>`:''}
  ${(()=>{const g=groupSets([w]);return Object.keys(g).length>1?`<p class="lbl">Set theo nhóm cơ</p><div style="margin-bottom:14px">${mgBars(g,null,0)}</div>`:''})()}
- ${w.exercises.map(e=>{let n=0;return `<div class="dx"><b>${esc(exOf(e.exId).name)}</b><ol>${e.sets.map(s=>`<li><span class="sn ${s.t==='w'?'wu':''}">${s.t==='w'?'K':++n}</span>${fx(s.w)} kg × ${s.r}</li>`).join('')}</ol></div>`}).join('')}
+ ${w.exercises.map(e=>{let n=0;return `<div class="dx"><b>${esc(exOf(e.exId).name)}</b><ol>${e.sets.map(s=>`<li><span class="sn ${s.t==='w'?'wu':''}">${s.t==='w'?'K':++n}</span>${setTxt(s)}</li>`).join('')}</ol></div>`}).join('')}
  <div class="row3"><button class="btn" data-act="wedit" data-id="${w.id}">Sửa</button><button class="btn" data-act="wrepeat" data-id="${w.id}">Tập lại</button><button class="btn danger" data-act="wdel" data-id="${w.id}">Xoá</button></div>`,'tall')}
 const findW=id=>D.workouts.find(w=>w.id===id);
 
@@ -1160,19 +1253,24 @@ function parseDate(s){s=String(s||'').trim();const m=s.match(/(\d{1,2})\s+([A-Za
 function importHevy(txt){
  const rows=parseCSV(txt.replace(/^\uFEFF/,'')).filter(r=>r.length>1);if(rows.length<2)return toast('File CSV trống');
  const h=rows[0].map(s=>s.trim().toLowerCase()),ix=k=>h.indexOf(k);
- const c={title:ix('title'),start:ix('start_time'),end:ix('end_time'),ex:ix('exercise_title'),type:ix('set_type'),kg:ix('weight_kg'),lb:ix('weight_lbs'),reps:ix('reps')};
+ const c={title:ix('title'),start:ix('start_time'),end:ix('end_time'),ex:ix('exercise_title'),type:ix('set_type'),kg:ix('weight_kg'),lb:ix('weight_lbs'),reps:ix('reps'),km:ix('distance_km'),mi:ix('distance_miles'),sec:ix('duration_seconds')};
  if(c.start<0||c.ex<0||c.reps<0)return toast('Không nhận ra định dạng CSV của Hevy');
  const map=new Map();
  for(const r of rows.slice(1)){const st=parseDate(r[c.start]);if(!st)continue;const title=(c.title>=0?r[c.title]:'')||'Buổi tập';const key=st+'|'+title;
   let w=map.get(key);if(!w){const en=c.end>=0?parseDate(r[c.end]):null;w={start:st,end:en&&en>st?en:st+3600e3,name:title.trim(),ex:[]};map.set(key,w)}
-  const reps=parseInt(r[c.reps],10),nm=(r[c.ex]||'').trim();if(!(reps>0)||!nm)continue;
+  const reps=parseInt(r[c.reps],10),nm=(r[c.ex]||'').trim();
+  /* bài thời gian / quãng đường (Plank, Treadmill…): Hevy để trống reps, có duration_seconds / distance */
+  const sec=c.sec>=0?Math.round(num(r[c.sec])):0,km=Math.round((c.km>=0?num(r[c.km]):c.mi>=0?num(r[c.mi])*1.609344:0)*100)/100;
+  if(!nm||!(reps>0||sec>0||km>0))continue;
   let kg=c.kg>=0?num(r[c.kg]):(c.lb>=0?num(r[c.lb])*0.45359237:0);kg=Math.round(kg*100)/100;
-  let e=w.ex.find(x=>x.nm===nm);if(!e){e={nm,sets:[]};w.ex.push(e)}e.sets.push({w:kg,r:reps,t:/warm/i.test(c.type>=0?r[c.type]:'')?'w':'n'})}
+  let e=w.ex.find(x=>x.nm===nm);if(!e){e={nm,sets:[]};w.ex.push(e)}const t=/warm/i.test(c.type>=0?r[c.type]:'')?'w':'n';
+  e.sets.push(reps>0?{w:kg,r:reps,t}:Object.assign({t},kg?{w:kg}:{},km?{km}:{},sec?{tm:sec}:{}))}
  const have=new Set(D.workouts.map(w=>w.start));const all=[...map.values()].filter(w=>w.ex.length);const fresh=all.filter(w=>!have.has(w.start));
  if(!fresh.length)return toast(all.length?'Các buổi trong file đã có sẵn':'Không đọc được buổi tập nào');
  const byName=new Map(D.exercises.map(e=>[norm(e.name),e.id]));const newNames=new Set(fresh.flatMap(w=>w.ex.map(e=>e.nm)).filter(n=>!byName.has(norm(n))));
  confirmSheet(`Tìm thấy <b>${fresh.length}</b> buổi tập mới${all.length>fresh.length?` (bỏ qua ${all.length-fresh.length} buổi trùng)`:''}${newNames.size?`, kèm ${newNames.size} bài tập chưa có trong danh sách`:''}. Nhập vào?`,'Nhập lịch sử',()=>{
-  const added=[];for(const w of fresh){const ws={id:uid(),u:Date.now(),name:w.name,start:w.start,end:w.end,routineId:null,src:'hevy',exercises:w.ex.map(e=>{let id=byName.get(norm(e.nm));if(!id){id=uid();const nx={id,u:Date.now(),name:e.nm,group:'Khác',custom:true},rf=autoRef(e.nm);if(rf)nx.ref=rf;D.exercises.push(nx);byName.set(norm(e.nm),id)}return{exId:id,sets:e.sets}})};D.workouts.push(ws);added.push(ws)}
+  const added=[];for(const w of fresh){const ws={id:uid(),u:Date.now(),name:w.name,start:w.start,end:w.end,routineId:null,src:'hevy',exercises:w.ex.map(e=>{let id=byName.get(norm(e.nm));if(!id){id=uid();const nx={id,u:Date.now(),name:e.nm,group:'Khác',custom:true},rf=autoRef(e.nm);if(rf)nx.ref=rf;
+   const st=e.sets.find(s=>s.tm||s.km);if(st&&!e.sets.some(s=>s.r))nx.ty=st.km?'dt':st.w?'wt':'t';D.exercises.push(nx);byName.set(norm(e.nm),id)}return{exId:id,sets:e.sets}})};D.workouts.push(ws);added.push(ws)}
   EXM=null;D.workouts.sort((a,b)=>b.start-a.start);for(const w of D.workouts)w.prs=computePRs(w);save();S.view=null;S.tab='history';render();toast('Đã nhập '+added.length+' buổi tập')})}
 /* ---------- nhập số đo cơ thể / InBody từ Excel hoặc CSV ---------- */
 /* tên cột được so khớp sau khi bỏ dấu, bỏ phần trong ngoặc (đơn vị, viết tắt) và ký tự lạ */
@@ -1381,27 +1479,28 @@ const A={
  settings:()=>settingsSheet(),
  'hint-off':()=>{D.settings.hintOff=true;save();render()},
  'start-empty':()=>begin({name:'Buổi tập '+partOfDay()}),
- 'start-routine':d=>{const r=D.routines.find(x=>x.id===d.id);if(r)begin({name:r.name,routineId:r.id,exercises:r.items.map(it=>({exId:it.exId,sets:planOf(it).map(p=>({w:planStr(p.w),r:planStr(p.r),done:false,t:p.t==='w'?'w':'n'}))}))})},
+ 'start-routine':d=>{const r=D.routines.find(x=>x.id===d.id);if(r)begin({name:r.name,routineId:r.id,exercises:r.items.map(it=>({exId:it.exId,sets:planOf(it).map(p=>Object.assign(planEdit(p),{done:false}))}))})},
  resume:()=>{S.view='workout';render();scrollTo(0,0)},
  minimize:()=>{S.view=null;render()},
- check:d=>{const a=D.active,e=a.exercises[d.i],s=e.sets[d.j];
-  if(!s.done){const p=prevOf(e)[d.j];if(s.w===''&&p)s.w=fx(p.w);if(s.r===''&&p)s.r=String(p.r);if(s.w==='')s.w='0';
-   if(!(num(s.r)>0)){toast('Nhập số reps trước đã');s.w=s.w==='0'?'':s.w;return}
+ check:d=>{const a=D.active,e=a.exercises[d.i],s=e.sets[d.j],ty=tyId(e.exId),F=TYS[ty].f;
+  if(!s.done){const p=prevOf(e)[d.j],old=Object.assign({},s);
+   /* ô trống: lấy số của lần trước; kg trống = 0 (bodyweight) */
+   for(const k of F)if(emp(s[k])&&p&&fv(k,p[k]))s[k]=fv(k,p[k]);if(F.includes('w')&&emp(s.w))s.w='0';
+   if(!setOk(s,ty)){Object.assign(s,old);toast(needMsg(ty));return}
    s.done=true;if(!a.editId)startRest(D.restBy[e.exId]!=null?D.restBy[e.exId]:D.settings.rest)}else s.done=false;
   save();render()},
- addset:d=>{const sets=D.active.exercises[d.i].sets,l=sets[sets.length-1];sets.push(l?{w:l.w,r:l.r,done:false,t:'n'}:blank());save();render()},
+ addset:d=>{const sets=D.active.exercises[d.i].sets,l=sets[sets.length-1],n=blank();if(l)for(const k of FK)n[k]=emp(l[k])?'':l[k];sets.push(n);save();render()},
  setmenu:d=>{const s=D.active.exercises[d.i].sets[d.j];sheet(`<h3>Set</h3><div class="list"><button data-act="settype" data-i="${d.i}" data-j="${d.j}">${s.t==='w'?'Đổi thành set thường':'Đánh dấu là set khởi động (K)'}</button><button class="danger" data-act="setdel" data-i="${d.i}" data-j="${d.j}">Xoá set này</button></div>`)},
  settype:d=>{const s=D.active.exercises[d.i].sets[d.j];s.t=s.t==='w'?'n':'w';save();closeSheet();render()},
  setdel:d=>{D.active.exercises[d.i].sets.splice(d.j,1);save();closeSheet();render()},
  exmenu:d=>{const i=+d.i,e=D.active.exercises[i],cur=D.restBy[e.exId]!=null?D.restBy[e.exId]:D.settings.rest,L=D.active.exercises.length;
   sheet(`<h3>${esc(exOf(e.exId).name)}</h3><p class="lbl">Thời gian nghỉ cho bài này</p><div class="chips">${[0,45,60,90,120,150,180,240].map(s=>`<button class="chip ${s===cur?'on':''}" data-act="exrest" data-i="${i}" data-s="${s}">${s?fmtClock(s):'Tắt'}</button>`).join('')}</div>
-  <div class="list"><button data-act="exmove" data-i="${i}" data-d="-1" ${i?'':'disabled'}>Chuyển lên</button><button data-act="exmove" data-i="${i}" data-d="1" ${i<L-1?'':'disabled'}>Chuyển xuống</button><button data-act="exswap" data-i="${i}">Thay bằng bài khác</button><button class="danger" data-act="exdel" data-i="${i}">Bỏ bài này khỏi buổi tập</button></div>`)},
+  <div class="list"><button data-act="ro-open" data-k="w" ${L>1?'':'disabled'}>Sắp xếp thứ tự các bài (kéo thả)</button><button data-act="exswap" data-i="${i}">Thay bằng bài khác</button><button class="danger" data-act="exdel" data-i="${i}">Bỏ bài này khỏi buổi tập</button></div>`)},
  exrest:d=>{D.restBy[D.active.exercises[d.i].exId]=+d.s;save();closeSheet();render()},
- exmove:d=>{const x=D.active.exercises,i=+d.i,j=i+ +d.d;if(j<0||j>=x.length)return;[x[i],x[j]]=[x[j],x[i]];save();closeSheet();render()},
  exswap:d=>{const i=+d.i;openPicker(id=>{D.active.exercises[i].exId=id;save();render()},'Thay bằng bài')},
  exdel:d=>{D.active.exercises.splice(+d.i,1);save();closeSheet();render()},
  addex:()=>openPicker(id=>{const n=Math.max(3,(exHistory(id,D.active.editId,D.active.start)[0]||{sets:[]}).sets.length);D.active.exercises.push({exId:id,sets:Array.from({length:Math.min(n,6)},blank)});save();render();setTimeout(()=>scrollTo(0,document.body.scrollHeight),60)}),
- exinfo:d=>{const id=d.id,h=exHistory(id),b=best(h.flatMap(x=>x.sets));sheet(`<h3>${esc(exOf(id).name)}</h3>${demoHtml(exOf(id))}<div class="tiles" style="margin-top:14px"><div><b>${b.mw?fx(b.mw):'—'}</b><span>Tạ nặng nhất (kg)</span></div><div><b>${b.e1&&b.mw?fx(r1(b.e1)):'—'}</b><span>1RM ước tính (kg)</span></div></div><p class="lbl">Các buổi gần nhất</p>${h.slice(0,4).map(sessHtml).join('')||'<p class="empty">Chưa tập bài này.</p>'}`,'tall')},
+ exinfo:d=>{const id=d.id,all=!!d.all,h=exHistory(id),b=best(h.flatMap(x=>x.sets)),ty=tyId(id);sheet(`<h3>${esc(exOf(id).name)}</h3>${demoHtml(exOf(id))}<div style="margin-top:14px">${exTiles(ty,b,ty==='wr'?null:h.length)}</div><p class="lbl">${all?'Tất cả các buổi':'Các buổi gần nhất'}</p>${h.slice(0,all?h.length:5).map(sessHtml).join('')||'<p class="empty">Chưa tập bài này.</p>'}${h.length>5&&!all?`<button class="btn block" data-act="exinfo" data-id="${id}" data-all="1" style="margin-top:10px">Xem tất cả ${h.length} buổi</button>`:''}`,'tall')},
  'ref-pick':d=>{const e=exOf(d.id);S.refEx=d.id;S.rq=e.name.replace(/\(.*?\)/g,'').split(/\s+/).filter(w=>w.length>2).slice(0,2).join(' ');
   S.rsrc=S.rsrc||'wger';refSheet()},
  'ref-src':d=>{S.rsrc=d.k;refSheet()},
@@ -1410,9 +1509,11 @@ const A={
  pick:d=>{const cb=S.pick;S.pick=null;closeSheet();cb&&cb(d.id)},
  newex:d=>exSheet(null,!!d.p),
  nxg:d=>{S.nxg=d.g;$$('#nx-g .chip').forEach(c=>c.classList.toggle('on',c.dataset.g===d.g))},
+ nxt:d=>{S.nxt=d.t;$$('#nx-t .chip').forEach(c=>c.classList.toggle('on',c.dataset.t===d.t));const x=$('#nx-tx span');if(x)x.textContent='Ví dụ: '+TYS[d.t].x},
  'nx-save':d=>{const name=($('#nx-name').value||'').trim();if(!name)return toast('Nhập tên bài tập');
   const dup=D.exercises.find(e=>norm(e.name)===norm(name)&&e.id!==d.id);if(dup)return toast('Đã có bài tập trùng tên');
-  let id=d.id;if(id){const e=D.exercises.find(x=>x.id===id);e.name=name;e.group=S.nxg;e.u=Date.now()}else{id=uid();D.exercises.push({id,u:Date.now(),name,group:S.nxg,custom:true})}
+  let id=d.id,e;if(id){e=D.exercises.find(x=>x.id===id);e.name=name;e.group=S.nxg;e.u=Date.now()}else{id=uid();e={id,u:Date.now(),name,group:S.nxg,custom:true};D.exercises.push(e)}
+  if(S.nxt===(TY0[id]||'wr'))delete e.ty;else e.ty=S.nxt;
   EXM=null;save();closeSheet();if(d.p&&S.pick){const cb=S.pick;S.pick=null;cb(id)}else{render();toast('Đã lưu bài tập')}},
  'ex-remove':d=>{const id=d.id,used=D.workouts.some(w=>w.exercises.some(e=>e.exId===id))||D.routines.some(r=>r.items.some(i=>i.exId===id))||(D.active&&D.active.exercises.some(e=>e.exId===id));
   if(used)return toast('Bài này đã có trong lịch sử / routine nên không xoá được');
@@ -1427,7 +1528,7 @@ const A={
  w2rupd:d=>{const w=findW(d.id),r=w&&D.routines.find(x=>x.id===w.routineId);if(!r)return;const done=new Map(w.exercises.map(e=>[e.exId,e]));
   r.items=r.items.map(it=>{const e=done.get(it.exId);if(!e)return it;done.delete(it.exId);return{exId:it.exId,sets:e.sets.length,plan:planFromSets(e.sets)}}).concat([...done.values()].map(e=>({exId:e.exId,sets:e.sets.length,plan:planFromSets(e.sets)})));r.u=Date.now();save();closeSheet();render();toast('Đã cập nhật routine '+r.name)},
  wopen:d=>{const w=findW(d.id);if(w)wDetail(w)},
- wedit:d=>{const w=findW(d.id);if(!w)return;begin({editId:w.id,name:w.name,start:w.start,end:w.end,routineId:w.routineId,exercises:w.exercises.map(e=>({exId:e.exId,sets:e.sets.map(s=>({w:fx(s.w),r:String(s.r),t:s.t||'n',done:true}))}))})},
+ wedit:d=>{const w=findW(d.id);if(!w)return;begin({editId:w.id,name:w.name,start:w.start,end:w.end,routineId:w.routineId,exercises:w.exercises.map(e=>({exId:e.exId,sets:e.sets.map(s=>Object.assign(planEdit(s),{t:s.t||'n',done:true}))}))})},
  wrepeat:d=>{const w=findW(d.id);if(w)begin({name:w.name,routineId:w.routineId,exercises:w.exercises.map(e=>({exId:e.exId,sets:e.sets.map(s=>({w:'',r:'',done:false,t:s.t||'n'}))}))})},
  wdel:d=>confirmSheet('Xoá buổi tập này khỏi lịch sử?','Xoá buổi tập',()=>{tomb(d.id);D.workouts=D.workouts.filter(w=>w.id!==d.id);save();render();toast('Đã xoá')}),
  grp:d=>{S.grp=d.g==='Tất cả'?'':d.g;render()},
@@ -1438,7 +1539,8 @@ const A={
   confirmSheet(`Gộp <b>${esc(a.name)}</b> (${n} buổi) vào <b>${esc(b.name)}</b>?`,'Gộp bài',()=>{mergeEx(from,id);render();mapOpen();toast('Đã gộp vào '+b.name)})},'Map vào bài')},
  'map-keep':d=>{const e=D.exercises.find(x=>x.id===d.id);if(!e)return;e.keep=true;e.u=Date.now();save();render();mapOpen();toast('Đã giữ bài riêng — có thể sửa nhóm cơ / hình trong trang bài')},
  'map-unkeep':()=>{for(const e of D.exercises)if(e.keep){delete e.keep;e.u=Date.now()}save();render();mapOpen()},
- exopen:d=>{S.tab='ex';S.exId=d.id;S.met=null;render();scrollTo(0,0)},
+ exopen:d=>{S.tab='ex';S.exId=d.id;S.met=null;S.hAll=false;render();scrollTo(0,0)},
+ 'h-all':()=>{S.hAll=!S.hAll;render()},
  exback:()=>{S.exId=null;render()},
  exedit:()=>exSheet(exOf(S.exId)),
  met:d=>{S.met=d.k;render()},
@@ -1465,13 +1567,14 @@ const A={
   save();closeSheet();S.tab='body';render();toast(`Đã nhập ${n} lần đo mới${u?`, cập nhật ${u} lần`:''}`)},
  'body-del':d=>{tomb(d.id);D.body=D.body.filter(b=>b.id!==d.id);save();closeSheet();render();toast('Đã xoá')},
  'r-new':()=>{S.draft={id:null,name:'',days:[],items:[]};S.view='routine';render();scrollTo(0,0)},
- 'r-edit':d=>{const r=D.routines.find(x=>x.id===d.id);if(!r)return;S.draft=JSON.parse(JSON.stringify(r));S.draft.days=S.draft.days||[];S.draft.items.forEach(it=>it.plan=planOf(it).map(p=>({w:planStr(p.w),r:planStr(p.r),t:p.t==='w'?'w':'n'})));S.view='routine';render();scrollTo(0,0)},
+ 'r-edit':d=>{const r=D.routines.find(x=>x.id===d.id);if(!r)return;S.draft=JSON.parse(JSON.stringify(r));S.draft.days=S.draft.days||[];S.draft.items.forEach(it=>it.plan=planOf(it).map(planEdit));S.view='routine';render();scrollTo(0,0)},
  'r-cancel':()=>{S.draft=null;S.view=null;render()},
  'r-day':d=>{const r=S.draft,x=+d.d;r.days=r.days.includes(x)?r.days.filter(y=>y!==x):r.days.concat(x);render()},
- 'r-sadd':d=>{const pl=S.draft.items[d.i].plan;if(pl.length>=12)return;const l=pl[pl.length-1];pl.push(l?{w:l.w,r:l.r,t:'n'}:rset());render()},
- 'r-sdel':d=>{const pl=S.draft.items[d.i].plan;if(pl.length>1){pl.splice(+d.j,1);render()}},
+ 'r-sadd':d=>{const pl=S.draft.items[d.i].plan;if(pl.length>=12)return;const l=pl[pl.length-1],n=rset();if(l)for(const k of FK)n[k]=emp(l[k])?'':l[k];pl.push(n);render()},
+ 'r-sdel':d=>{const pl=S.draft.items[d.i].plan;if(pl.length>1)pl.splice(+d.j,1);else toast('Mỗi bài cần ít nhất 1 set');render()},
  'r-stype':d=>{const p=S.draft.items[d.i].plan[d.j];p.t=p.t==='w'?'n':'w';render()},
- 'r-move':d=>{const x=S.draft.items,i=+d.i,j=i+ +d.d;if(j<0||j>=x.length)return;[x[i],x[j]]=[x[j],x[i]];render()},
+ 'ro-open':(d,b)=>{if(b.disabled)return;closeSheet();reorderOpen(d.k)},
+ 'ro-ok':()=>closeSheet(),
  'r-del':d=>{S.draft.items.splice(+d.i,1);render()},
  'r-add':()=>openPicker(id=>{const n=Math.min(6,Math.max(3,((exHistory(id)[0])||{sets:[]}).sets.length));S.draft.items.push({exId:id,sets:n,plan:Array.from({length:n},rset)});render();setTimeout(()=>scrollTo(0,document.body.scrollHeight),60)}),
  'r-save':()=>{const r=S.draft;r.name=(r.name||'').trim();if(!r.name)return toast('Đặt tên cho routine');if(!r.items.length)return toast('Thêm ít nhất một bài tập');
@@ -1488,18 +1591,67 @@ const A={
 document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const f=A[b.dataset.act];if(f){e.preventDefault();unlockAudio();f(b.dataset,b,e)}});
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[role=button][data-act]')){e.preventDefault();e.target.click()}});
 document.addEventListener('input',e=>{const t=e.target,f=t.dataset.f;if(!f)return;
- if((f==='w'||f==='r')&&D.active){const s=D.active.exercises[t.dataset.i].sets[t.dataset.j];s[f]=t.value;save();if(s.done)updWk()}
+ if(f==='sv'&&D.active){const k=t.dataset.k,s=D.active.exercises[t.dataset.i].sets[t.dataset.j];if(k==='tm')t.value=typeDur(t.value);s[k]=t.value;save();if(s.done)updWk()}
  else if(f==='wname'&&D.active){D.active.name=t.value;save()}
  else if(f==='pickq'){S.pq=t.value;$('#picklist').innerHTML=pickList()}
  else if(f==='exq'){S.q=t.value;$('#exlist').innerHTML=exListHtml()}
  else if(f==='rname'&&S.draft){S.draft.name=t.value}
- else if((f==='rw'||f==='rr')&&S.draft){const p=S.draft.items[t.dataset.i].plan[t.dataset.j];p[f==='rw'?'w':'r']=t.value}
+ else if(f==='pv'&&S.draft){const k=t.dataset.k;if(k==='tm')t.value=typeDur(t.value);S.draft.items[t.dataset.i].plan[t.dataset.j][k]=t.value}
  else if(f==='refq'){S.rq=t.value;if(S.rsrc==='wger'){clearTimeout(wgT);wgT=setTimeout(wgSearch,450)}else $('#reflist').innerHTML=refList()}});
 document.addEventListener('change',async e=>{const t=e.target,f=t.dataset.f;if(f!=='imp-json'&&f!=='imp-hevy'&&f!=='imp-body')return;const file=t.files&&t.files[0];if(!file)return;
  if(f==='imp-body'){t.value='';try{await readBodyFile(file)}catch(err){toast('Không đọc được file')}return}
  let txt='';try{txt=await file.text()}catch(err){return toast('Không đọc được file')}t.value='';if(f==='imp-json')importJSON(txt);else importHevy(txt)});
 document.addEventListener('toggle',e=>{if(e.target.matches&&e.target.matches('details.more')){const o=e.target.open,c=e.target.classList;if(c.contains('sub'))S.bseg=o;else if(c.contains('tape'))S.btape=o;else S.bmore=o}},true);
 document.addEventListener('focusin',e=>{if(e.target.matches('.row input')){const t=e.target;setTimeout(()=>{try{t.select()}catch(x){}},0)}});
+
+/* ---------- cử chỉ: vuốt set sang trái để xoá, giữ tên bài để sắp xếp ---------- */
+/* noClick: chặn cú click mà trình duyệt bắn ra ngay sau khi vuốt / giữ, để không bấm nhầm nút bên dưới ngón tay */
+let noClick=0,swp=null,swOpen=null,lp=null,lpFired=false;const SWW=84;
+document.addEventListener('click',e=>{if(Date.now()<noClick){e.stopPropagation();e.preventDefault()}},true);
+const swClose=r=>{if(!r)return;r.style.transform='';r.parentNode&&r.parentNode.classList.remove('swo');if(swOpen===r)swOpen=null};
+document.addEventListener('pointerdown',e=>{
+ const row=e.target.closest('[data-sw]');
+ if(swOpen&&swOpen!==row&&!e.target.closest('.swdel'))swClose(swOpen);
+ if(row&&e.button<=0)swp={row,x0:e.clientX,y0:e.clientY,id:e.pointerId,base:row===swOpen?-SWW:0,x:0,on:false};
+ const h=e.target.closest('[data-lp]');
+ if(h&&e.button<=0){clearTimeout(lp&&lp.t);lp={x:e.clientX,y:e.clientY,id:e.pointerId,t:setTimeout(()=>{lp=null;lpFired=true;try{navigator.vibrate&&navigator.vibrate(12)}catch(x){}reorderOpen(h.dataset.lp)},480)}}
+ const it=e.target.closest('.ro-i');if(it&&e.button<=0)roStart(e,it)});
+document.addEventListener('pointermove',e=>{
+ if(lp&&e.pointerId===lp.id&&Math.hypot(e.clientX-lp.x,e.clientY-lp.y)>10){clearTimeout(lp.t);lp=null}
+ if(dr&&e.pointerId===dr.id){roMove(e);return}
+ const s=swp;if(!s||e.pointerId!==s.id)return;const dx=e.clientX-s.x0,dy=e.clientY-s.y0;
+ if(!s.on){if(Math.abs(dy)>10&&Math.abs(dy)>Math.abs(dx)){swp=null;return}if(Math.abs(dx)<10||Math.abs(dx)<Math.abs(dy))return;
+  s.on=true;s.row.style.transition='none';s.row.parentNode.classList.add('swo');const a=document.activeElement;if(a&&s.row.contains(a))a.blur()}
+ s.x=Math.min(0,s.base+dx);s.row.style.transform=`translateX(${s.x}px)`});
+const ptrEnd=e=>{
+ if(lp&&e.pointerId===lp.id){clearTimeout(lp.t);lp=null}
+ if(lpFired){lpFired=false;noClick=Date.now()+400}
+ if(dr&&e.pointerId===dr.id){roEnd();return}
+ const s=swp;if(!s||e.pointerId!==s.id)return;swp=null;if(!s.on)return;noClick=Date.now()+350;s.row.style.transition='';
+ const W=s.row.offsetWidth;
+ if(e.type==='pointerup'&&s.x<-W*.55){const b=s.row.parentNode.querySelector('.swdel');s.row.style.transform='translateX(-100%)';setTimeout(()=>A[b.dataset.act](b.dataset,b),160)}
+ else if(s.x<-40){s.row.style.transform=`translateX(-${SWW}px)`;swOpen=s.row}else swClose(s.row)};
+document.addEventListener('pointerup',ptrEnd);document.addEventListener('pointercancel',ptrEnd);
+document.addEventListener('contextmenu',e=>{if(e.target.closest('[data-lp]'))e.preventDefault()});
+
+/* sắp xếp bài: danh sách gọn, giữ và kéo từng bài (đổi thứ tự áp dụng ngay khi thả) */
+const roList=k=>k==='r'?(S.draft&&S.draft.items):(D.active&&D.active.exercises);
+function reorderOpen(k){const L=roList(k);if(!L||L.length<2)return;S.rok=k;
+ sheet(`<h3>Sắp xếp bài tập</h3><p class="mute small" style="margin:-4px 0 10px">Giữ một bài rồi kéo lên / xuống.</p><div id="ro" class="ro">${roHtml()}</div><button class="btn red block" data-act="ro-ok" style="margin-top:14px">Xong</button>`,'tall')}
+const roHtml=()=>(roList(S.rok)||[]).map((x,i)=>{const e=exOf(x.exId),n=(x.plan||x.sets||[]).length;return `<div class="ro-i" data-i="${i}">${thumb(e)}<span><b>${esc(e.name)}</b><small>${n} set</small></span><i class="ro-g" aria-hidden="true">${ICON.grip}</i></div>`}).join('');
+let dr=null;
+function roStart(e,it){e.preventDefault();const box=it.parentNode,items=[...box.children],i=items.indexOf(it),pn=box.closest('.panel');
+ const H=items.length>1?items[1].offsetTop-items[0].offsetTop:it.offsetHeight;
+ dr={id:e.pointerId,it,items,i,to:i,y0:e.clientY,H,pn,st:pn?pn.scrollTop:0,ly:e.clientY};it.classList.add('drag');items.forEach(x=>{if(x!==it)x.style.transition='transform .15s'})}
+function roMove(e){const d=dr;d.ly=e.clientY;
+ /* tự cuộn khi kéo gần mép trên / dưới của bảng */
+ if(d.pn){const r=d.pn.getBoundingClientRect();if(e.clientY<r.top+60)d.pn.scrollTop-=10;else if(e.clientY>r.bottom-60)d.pn.scrollTop+=10}
+ const dy=e.clientY-d.y0+(d.pn?d.pn.scrollTop-d.st:0);d.it.style.transform=`translateY(${dy}px)`;
+ d.to=Math.max(0,Math.min(d.items.length-1,d.i+Math.round(dy/d.H)));
+ d.items.forEach((x,j)=>{if(x===d.it)return;const sh=d.i<d.to&&j>d.i&&j<=d.to?-d.H:d.to<d.i&&j>=d.to&&j<d.i?d.H:0;x.style.transform=sh?`translateY(${sh}px)`:''})}
+function roEnd(){const d=dr;dr=null;noClick=Date.now()+300;const L=roList(S.rok);
+ if(L&&d.to!==d.i){L.splice(d.to,0,L.splice(d.i,1)[0]);if(S.rok==='w')save();render()}
+ const box=$('#ro');if(box)box.innerHTML=roHtml()}
 
 /* ---------- timers, sound, wake lock ---------- */
 let ac=null;function unlockAudio(){try{if(!ac){const C=window.AudioContext||window.webkitAudioContext;if(C)ac=new C()}if(ac&&ac.state==='suspended')ac.resume()}catch(e){}}

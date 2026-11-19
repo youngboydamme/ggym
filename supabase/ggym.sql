@@ -73,7 +73,10 @@ select
   (s.x ->> 'r')::integer as reps,
   (s.x ->> 'w')::numeric * (s.x ->> 'r')::integer as volume_kg,
   case when (s.x ->> 'r')::integer = 1 then (s.x ->> 'w')::numeric
-       else round((s.x ->> 'w')::numeric * (1 + (s.x ->> 'r')::numeric / 30), 1) end as est_1rm_kg
+       else round((s.x ->> 'w')::numeric * (1 + (s.x ->> 'r')::numeric / 30), 1) end as est_1rm_kg,
+  -- bài thời gian / quãng đường (Plank, Treadmill…): tm = giây, km = quãng đường
+  (s.x ->> 'tm')::integer as duration_sec,
+  (s.x ->> 'km')::numeric as distance_km
 from public.ggym_docs d
 cross join lateral jsonb_array_elements(coalesce(d.doc -> 'workouts', '[]'::jsonb)) as w
 cross join lateral jsonb_array_elements(coalesce(w -> 'exercises', '[]'::jsonb)) with ordinality as e(x, ord)
