@@ -4,14 +4,35 @@ App ghi buổi tập gym cá nhân cho iPhone, dạng web app cài lên màn hì
 
 ## Tính năng
 
-- Ghi buổi tập: kg / reps từng set, cột "lần trước", set khởi động, đồng hồ nghỉ có âm báo; vuốt set sang trái để xoá
+App có 4 tab: **Tập**, **Lịch sử**, **Bài tập**, **Cơ thể**, cùng bảng **Cài đặt** (biểu tượng bánh răng).
+
+**Tập**
+- Tuần này: các ngày đã tập, số buổi, tổng volume và thời gian
+- Routine theo ngày trong tuần, chỉnh từng set, giữ tên bài để kéo thả đổi thứ tự; dòng tổng số bài, số set, khối lượng; lưu một buổi đã tập thành routine
+- Ghi buổi tập: kg / reps từng set, cột "lần trước", set khởi động, khối lượng cộng dồn khi đang tập; vuốt set sang trái để xoá
 - Bài thời gian / quãng đường: Plank, Dead Hang… ghi thời gian; Treadmill, chạy, đạp xe… ghi km + thời gian (đổi cách ghi trong Sửa bài tập)
-- Routine theo ngày trong tuần, giữ tên bài để kéo thả đổi thứ tự
-- Lịch sử, kỷ lục cá nhân (PR), biểu đồ tiến bộ từng bài, kỷ lục theo số reps
+- Đồng hồ nghỉ có âm báo, ±15 giây, thời gian nghỉ mặc định và riêng từng bài
+
+**Lịch sử**
+- Xem theo tháng với lịch (ngày có tập tô đỏ), tổng số buổi, số buổi 30 ngày, số tuần tập liên tiếp
+- Sửa, xoá, lặp lại buổi tập; số kỷ lục (PR) mỗi buổi
+- Thống kê 30 ngày / 3 tháng / 1 năm: so với kỳ trước, biểu đồ Volume / Thời gian / Set / Buổi, phân bổ set theo nhóm cơ, bài tập chính kèm 1RM ước tính, kỷ lục, thói quen theo ngày trong tuần
+
+**Bài tập**
+- Thư viện 310 bài, tên theo kiểu "tên bài (dụng cụ)", lọc theo 10 nhóm cơ, tìm kiếm
+- Lưu ý kỹ thuật tiếng Việt, link video YouTube; ảnh minh hoạ có sẵn cho 48 bài, thêm ảnh / video từ wger.de
+- Biểu đồ tiến bộ từng bài (1RM, tạ max, volume, reps, thời gian, quãng đường), kỷ lục theo số reps
+- Tạo bài tập mới; màn **Map bài tập** gộp bài tự tạo / đã xoá vào bài có sẵn, có gợi ý bài gần giống
+
+**Cơ thể**
 - Cân nặng và % mỡ theo thời gian
-- Hình minh hoạ và lưu ý kỹ thuật tiếng Việt cho 48 bài có sẵn, link video YouTube
+- Chỉ số InBody: cơ xương, mỡ, mỡ nội tạng, nước, BMR, điểm InBody…, nạc / mỡ từng vùng
+- Số đo các vòng (cm): eo, hông/mông, ngực, vai, đùi và bắp tay tách trái / phải
+- Nhập hàng loạt từ Excel / CSV, có file mẫu
+
+**Dữ liệu**
 - Sao lưu / khôi phục JSON
-- Đồng bộ Supabase (tuỳ chọn): offline-first, gộp thay đổi giữa nhiều máy
+- Đồng bộ Supabase (tuỳ chọn): offline-first, gộp thay đổi giữa nhiều máy; 1 email = 1 hồ sơ
 
 ## Cài lên iPhone
 
@@ -65,4 +86,4 @@ Dữ liệu trên máy nằm trong `localStorage`. Các khoá `sota.*` được 
 
 ## Nguồn ảnh
 
-Ảnh minh hoạ lấy từ [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (public domain / Unlicense).
+Ảnh minh hoạ lấy từ [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (public domain / Unlicense). Một số ảnh / video khác tải từ [wger.de](https://wger.de) (Creative Commons).
