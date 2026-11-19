@@ -1,5 +1,5 @@
 // GGym — service worker: chạy offline, tự cập nhật ở lần mở sau
-const CACHE = 'ggym-v24';
+const CACHE = 'ggym-v25';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './css/app.css',
   './js/util.js', './js/library.js', './js/store.js', './js/ui.js', './js/guide.js', './js/views.js', './js/sheet.js', './js/io.js', './js/sync.js', './js/main.js',
   './icons/icon-32.png', './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png',

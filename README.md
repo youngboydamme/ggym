@@ -55,8 +55,13 @@ Publishable key (anon key) được thiết kế để đặt công khai trong a
 
 ### Cách đồng bộ hoạt động
 
-- Mỗi tài khoản có 1 dòng trong bảng `ggym_docs`: toàn bộ dữ liệu ở dạng `jsonb`, kèm số phiên bản `rev`.
-- App luôn lưu trên máy trước. Khi có mạng, app lấy bản trên server và **gộp** hai bản theo id từng buổi tập / số đo / routine / bài tập (bản sửa sau thắng, mục đã xoá được ghi nhớ), rồi ghi lên server có kiểm tra `rev` để hai máy không ghi đè nhau.
+- Mỗi buổi tập / lần đo / routine / bài tập là **1 dòng** trong bảng `ggym_items` (`kind`, `id`, `data` jsonb, `u` = thời điểm sửa). Mục đã xoá là dòng `kind = 'del'`; cài đặt, thời gian nghỉ và buổi đang tập nằm ở dòng `kind = 'meta'`.
+- App luôn lưu trên máy trước. Khi có mạng, app chỉ **tải các dòng mới hơn** lần đồng bộ trước (theo `updated_at` của server), gộp theo id (bản sửa sau thắng, mục đã xoá được ghi nhớ), rồi chỉ **gửi các mục đã sửa** kể từ lần gửi trước. Dung lượng mỗi lần đồng bộ tỉ lệ với số thay đổi, không tăng theo tổng số buổi tập.
+- Trigger trên server bỏ qua bản gửi lên cũ hơn bản đang có (so `u`), nên hai máy gửi cùng lúc không đè nhau.
+- Cách cũ (cả dữ liệu là 1 dòng `jsonb` trong `ggym_docs`) vẫn được giữ:
+  - Chạy SQL mới sẽ chuyển dữ liệu `ggym_docs` sang `ggym_items` ngay.
+  - Supabase chưa chạy SQL mới thì app tự dùng cách cũ, nên cập nhật app trước hay chạy SQL trước đều được.
+  - Máy chưa cập nhật app vẫn ghi vào `ggym_docs`; app mới kiểm tra `rev` của dòng đó mỗi lần đồng bộ và gộp vào nếu nó đổi.
 - App tự đồng bộ khi mở, khi quay lại app, khi có mạng trở lại và vài giây sau mỗi thay đổi. Có thêm nút **Đồng bộ ngay** trong Cài đặt.
 
 ### Phân tích dữ liệu (SQL / Power BI)
@@ -86,13 +91,13 @@ js/guide.js           hình minh hoạ, lưu ý kỹ thuật, video
 js/views.js           các màn hình
 js/sheet.js           sheet, toast, chọn bài, kết thúc buổi
 js/io.js              sao lưu / khôi phục, nhập Excel / CSV, Cài đặt
-js/sync.js            đồng bộ Supabase
+js/sync.js            đồng bộ Supabase (mỗi mục 1 dòng, tự dùng cách cũ khi chưa có bảng)
 js/main.js            hành động, sự kiện, cử chỉ, đồng hồ, khởi động
 sw.js                 service worker: chạy offline, tự cập nhật
 manifest.webmanifest  thông tin cài đặt PWA
 icons/                biểu tượng app
 img/                  ảnh minh hoạ động tác (2 khung / bài)
-supabase/ggym.sql     bảng, RLS, view phân tích
+supabase/ggym.sql     bảng, RLS, trigger, chuyển dữ liệu cũ, view phân tích
 ```
 
 Các file JS là script thường (không phải module), dùng chung phạm vi toàn cục và chạy theo thứ tự trong `index.html`: file sau dùng được hàm / biến của file trước. Khi thêm file mới, thêm vào cả `index.html` và danh sách `SHELL` trong `sw.js`. **Mỗi lần sửa bất kỳ file nào, tăng số `CACHE` trong `sw.js`**, nếu không máy đã cài sẽ tiếp tục dùng bản cũ trong cache.

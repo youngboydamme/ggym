@@ -1,7 +1,8 @@
 // GGym — đồng bộ Supabase
 /* ---------- cloud sync (Supabase) ----------
-   1 dòng / tài khoản trong bảng ggym_docs (doc jsonb + rev). App vẫn offline-first:
-   lưu máy trước, có mạng thì gộp (theo id + thời điểm sửa, có danh sách đã xoá) rồi đẩy lên. */
+   mỗi mục 1 dòng trong bảng ggym_items (xem syncItems); Supabase chưa có bảng đó thì dùng cách cũ:
+   1 dòng / tài khoản trong ggym_docs (syncDoc). App vẫn offline-first: lưu máy trước, có mạng thì gộp
+   (theo id + thời điểm sửa, có danh sách đã xoá) rồi đẩy lên. */
 const CLOUD0={url:'https://vawfperiksgzgdovbqjt.supabase.co',key:'sb_publishable_hK962oRny9XZbugoqath0Q_xnXqL0Dr'}; // điền URL + publishable key để ai cài app cũng có sẵn cấu hình
 const cloudCfg=()=>{let c=null;try{c=JSON.parse(localStorage.getItem('ggym.cloud')||'null')}catch(e){}return(c&&c.url&&c.key)?c:(CLOUD0.url&&CLOUD0.key?CLOUD0:null)};
 const AKEY=()=>'ggym.auth.'+P.cur;
@@ -38,30 +39,78 @@ function mergeDocs(L,R){const del=Object.assign({},R.del||{},L.del||{});const lN
  out.del=del;out.mt=Math.max(L.mt||0,R.mt||0);delete out.sync;return fix(out)}
 const isSeedRoutine=r=>!r.u&&R0.some(([n,,items])=>n===r.name&&JSON.stringify(items.map(([exId,sets])=>({exId,sets})))===JSON.stringify((r.items||[]).map(i=>({exId:i.exId,sets:i.sets}))));
 const sig=x=>['workouts','body','exercises','routines'].map(k=>(x[k]||[]).map(i=>i.id+':'+(i.u||0)).sort().join(',')).join('|')+'|'+Object.keys(x.del||{}).length+'|'+(x.mt||0);
-let syncing=false,syncT=null;
+const KINDS=['workouts','body','exercises','routines'];
+let syncing=false,syncT=null,itemsMode=null;
 function scheduleSync(ms){clearTimeout(syncT);if(cloudCfg()&&getAuth())syncT=setTimeout(()=>sync(),ms==null?4000:ms)}
 function syncText(){const sy=D.sync||{};if(S.syncErr)return 'Lỗi: '+esc(S.syncErr);if(syncing)return 'Đang đồng bộ…';if(!sy.at)return 'Chưa đồng bộ lần nào';
  return 'Đồng bộ lần cuối '+hm(sy.at)+', '+dm(sy.at)+(sy.dirty?' · còn thay đổi chờ gửi':'')}
 function setSyncSt(){const el=$('#sync-st');if(el)el.innerHTML=syncText()}
+/* Supabase đã có bảng ggym_items chưa (đã chạy file SQL mới chưa). Chưa có thì dùng cách cũ ggym_docs,
+   nên đưa app lên trước khi chạy SQL vẫn an toàn */
+async function hasItems(){if(itemsMode!=null)return itemsMode;
+ try{await sbFetch('/rest/v1/ggym_items?select=id&limit=1');itemsMode=true}
+ catch(e){if(e.status===404||e.code==='PGRST205'||e.code==='42P01')itemsMode=false;else throw e}
+ return itemsMode}
+/* cách cũ: cả dữ liệu là 1 dòng jsonb, ghi đè có kiểm tra rev. Trả về true nếu có dữ liệu mới tải về, null nếu đã đổi tài khoản */
+async function syncDoc(uid,pid){let pulled=false;
+ for(let i=0;i<4;i++){
+  const rows=await sbFetch('/rest/v1/ggym_docs?select=doc,rev&user_id=eq.'+uid);if(P.cur!==pid)return null;
+  const row=rows&&rows[0],sy=D.sync||{},first=!sy.rev||sy.uid!==uid,seq=editSeq;
+  if(!row){const r=await sbFetch('/rest/v1/ggym_docs?select=rev',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({user_id:uid,doc:stripD(D),rev:1})}).catch(e=>{if(e.status===409)return null;throw e});
+   if(P.cur!==pid)return null;if(!r)continue;D.sync={uid,rev:1,at:Date.now(),dirty:editSeq!==seq};saveRaw();return pulled}
+  let push=!!sy.dirty&&!first;
+  if(first||row.rev!==sy.rev){const R=fix(row.doc||{});
+   if(first&&R.routines.length)D.routines=D.routines.filter(r=>!isSeedRoutine(r)); // bỏ routine mẫu chưa sửa để không bị trùng
+   D=mergeDocs(D,R);ensureLib();D.sync={uid,rev:row.rev,at:sy.at,dirty:!!sy.dirty};EXM=null;pulled=true;push=sig(D)!==sig(R)}
+  if(!push){D.sync=Object.assign({},D.sync,{uid,rev:row.rev,at:Date.now(),dirty:editSeq!==seq});saveRaw();return pulled}
+  const r=await sbFetch('/rest/v1/ggym_docs?user_id=eq.'+uid+'&rev=eq.'+row.rev+'&select=rev',{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({doc:stripD(D),rev:row.rev+1})});
+  if(P.cur!==pid)return null;if(!r||!r.length){saveRaw();continue}
+  D.sync={uid,rev:row.rev+1,at:Date.now(),dirty:editSeq!==seq};saveRaw();return pulled}
+ throw new Error('Dữ liệu đang thay đổi ở máy khác, thử lại sau')}
+/* cách mới: mỗi mục 1 dòng trong ggym_items. Mỗi lần đồng bộ:
+   1. gộp dữ liệu dạng cũ trong ggym_docs nếu nó đổi (lần đầu chuyển sang, hoặc máy chưa cập nhật app vừa ghi vào)
+   2. tải các dòng có updated_at mới hơn mốc lần trước (lùi 2 phút cho chắc), gộp theo id + u như mergeDocs
+   3. gửi các mục sửa sau lần gửi trước (u > pt), bỏ qua mục server đã có bản bằng hoặc mới hơn
+   D.sync: ic = mốc tải (giờ server), pt = mốc gửi (giờ máy), drev = rev ggym_docs đã gộp, xs = id bài tập server đã có */
+async function syncItems(uid,pid){
+ const sy=D.sync||{},acct=sy.uid===uid,seq=editSeq,t0=Date.now(),before=sig(D);
+ const R={workouts:[],body:[],exercises:[],routines:[],del:{}},srv=new Map();let ic=acct?sy.ic||null:null,fromDoc=null,n=0;
+ const dr=await sbFetch('/rest/v1/ggym_docs?select=rev&user_id=eq.'+uid);if(P.cur!==pid)return null;
+ const drev=dr&&dr[0]?dr[0].rev:0;
+ if(drev&&!(acct&&sy.drev===drev)){const rows=await sbFetch('/rest/v1/ggym_docs?select=doc&user_id=eq.'+uid);if(P.cur!==pid)return null;if(rows&&rows[0])fromDoc=fix(rows[0].doc||{})}
+ const since=ic?new Date(Date.parse(ic)-120000).toISOString():null;
+ for(let off=0;;off+=1000){
+  const rows=await sbFetch('/rest/v1/ggym_items?select=kind,id,data,u,updated_at&user_id=eq.'+uid+(since?'&updated_at=gt.'+encodeURIComponent(since):'')+'&order=updated_at.asc,kind.asc,id.asc&limit=1000&offset='+off);
+  if(P.cur!==pid)return null;
+  for(const r of rows||[]){n++;if(!ic||Date.parse(r.updated_at)>Date.parse(ic))ic=r.updated_at;srv.set(r.kind+'|'+r.id,+r.u||0);
+   if(r.kind==='del')R.del[r.id]=Math.max(R.del[r.id]||0,+r.u||0);
+   else if(r.kind==='meta'){if(r.data)Object.assign(R,{settings:r.data.settings,restBy:r.data.restBy,active:r.data.active||null,mt:+r.data.mt||0})}
+   else if(R[r.kind]&&r.data)R[r.kind].push(r.data)}
+  if(!rows||rows.length<1000)break}
+ if(!acct&&(R.routines.length||(fromDoc&&fromDoc.routines.length)))D.routines=D.routines.filter(r=>!isSeedRoutine(r)); // bỏ routine mẫu chưa sửa để không bị trùng
+ const keep=D.sync;
+ if(fromDoc)D=mergeDocs(D,fromDoc);
+ if(n)D=mergeDocs(D,R);
+ if(fromDoc||n){D.sync=keep;EXM=null;ensureLib()}
+ const pulled=sig(D)!==before;
+ /* gửi */
+ const pt=acct?+sy.pt||0:0,xs=new Set(acct?sy.xs||[]:[]),out=[];
+ const add=(kind,id,data,u)=>{u=Math.round(+u||0);const s=srv.get(kind+'|'+id);if(s!=null&&s>=u)return;out.push({user_id:uid,kind,id:String(id),data,u})};
+ for(const k of KINDS)for(const x of D[k]){if(D.del[x.id])continue;if(!pt||(+x.u||0)>pt||(k==='exercises'&&!xs.has(x.id)))add(k,x.id,x,x.u)}
+ for(const id in D.del){const t=D.del[id];if(!pt||t>pt)add('del',id,null,t)}
+ if(!pt||(D.mt||0)>pt)add('meta','doc',{settings:D.settings,restBy:D.restBy,active:D.active||null,mt:D.mt||0},D.mt||0);
+ for(let i=0;i<out.length;i+=500){
+  await sbFetch('/rest/v1/ggym_items?on_conflict=user_id,kind,id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(out.slice(i,i+500))});
+  if(P.cur!==pid)return null}
+ D.sync=Object.assign({},D.sync,{uid,ic,pt:t0,drev:drev||0,xs:D.exercises.map(e=>e.id),sent:out.length,got:n,at:Date.now(),dirty:editSeq!==seq});delete D.sync.rev;
+ saveRaw();return pulled}
 async function sync(manual){
  if(syncing||!cloudCfg()||!getAuth())return;
  if(navigator.onLine===false){if(manual)toast('Đang offline — sẽ đồng bộ khi có mạng');return}
- syncing=true;S.syncErr='';setSyncSt();const pid=P.cur;let pulled=false,ok=false;
+ syncing=true;S.syncErr='';setSyncSt();const pid=P.cur;
  try{await token();const uid=getAuth().uid;
-  for(let i=0;i<4;i++){
-   const rows=await sbFetch('/rest/v1/ggym_docs?select=doc,rev&user_id=eq.'+uid);if(P.cur!==pid)return;
-   const row=rows&&rows[0],sy=D.sync||{},first=!sy.rev||sy.uid!==uid,seq=editSeq;
-   if(!row){const r=await sbFetch('/rest/v1/ggym_docs?select=rev',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({user_id:uid,doc:stripD(D),rev:1})}).catch(e=>{if(e.status===409)return null;throw e});
-    if(P.cur!==pid)return;if(!r)continue;D.sync={uid,rev:1,at:Date.now(),dirty:editSeq!==seq};saveRaw();ok=true;break}
-   let push=!!sy.dirty&&!first;
-   if(first||row.rev!==sy.rev){const R=fix(row.doc||{});
-    if(first&&R.routines.length)D.routines=D.routines.filter(r=>!isSeedRoutine(r)); // bỏ routine mẫu chưa sửa để không bị trùng
-    D=mergeDocs(D,R);ensureLib();D.sync={uid,rev:row.rev,at:sy.at,dirty:!!sy.dirty};EXM=null;pulled=true;push=sig(D)!==sig(R)}
-   if(!push){D.sync=Object.assign({},D.sync,{uid,rev:row.rev,at:Date.now(),dirty:editSeq!==seq});saveRaw();ok=true;break}
-   const r=await sbFetch('/rest/v1/ggym_docs?user_id=eq.'+uid+'&rev=eq.'+row.rev+'&select=rev',{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({doc:stripD(D),rev:row.rev+1})});
-   if(P.cur!==pid)return;if(!r||!r.length){saveRaw();continue}
-   D.sync={uid,rev:row.rev+1,at:Date.now(),dirty:editSeq!==seq};saveRaw();ok=true;break}
-  if(!ok)throw new Error('Dữ liệu đang thay đổi ở máy khác, thử lại sau');
+  const pulled=(await hasItems())?await syncItems(uid,pid):await syncDoc(uid,pid);
+  if(pulled==null)return; // đã đổi tài khoản giữa chừng
   if(pulled){const ae=document.activeElement;if(!(ae&&ae.matches&&ae.matches('input')))render()}
   if(manual)toast('Đã đồng bộ')}
  catch(e){S.syncErr=e.message;if(manual)toast('Không đồng bộ được: '+e.message)}
