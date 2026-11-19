@@ -73,8 +73,21 @@ Power BI: dùng connector PostgreSQL với chuỗi kết nối lấy từ **Conn
 
 ## Cấu trúc
 
+Không cần build: các file được phục vụ nguyên trạng trên GitHub Pages.
+
 ```
-index.html            toàn bộ app (HTML + CSS + JS, không cần build)
+index.html            khung trang, nạp CSS và các file JS theo thứ tự
+css/app.css           toàn bộ giao diện
+js/util.js            định dạng số, ngày giờ, 1RM, icon
+js/library.js         thư viện 310 bài tập, cách ghi set, routine mẫu
+js/store.js           lưu trữ trên máy (IndexedDB + localStorage), PR
+js/ui.js              trạng thái giao diện, render
+js/guide.js           hình minh hoạ, lưu ý kỹ thuật, video
+js/views.js           các màn hình
+js/sheet.js           sheet, toast, chọn bài, kết thúc buổi
+js/io.js              sao lưu / khôi phục, nhập Excel / CSV, Cài đặt
+js/sync.js            đồng bộ Supabase
+js/main.js            hành động, sự kiện, cử chỉ, đồng hồ, khởi động
 sw.js                 service worker: chạy offline, tự cập nhật
 manifest.webmanifest  thông tin cài đặt PWA
 icons/                biểu tượng app
@@ -82,7 +95,16 @@ img/                  ảnh minh hoạ động tác (2 khung / bài)
 supabase/ggym.sql     bảng, RLS, view phân tích
 ```
 
-Dữ liệu trên máy nằm trong `localStorage`. Các khoá `sota.*` được giữ từ tên cũ của app để không mất dữ liệu.
+Các file JS là script thường (không phải module), dùng chung phạm vi toàn cục và chạy theo thứ tự trong `index.html`: file sau dùng được hàm / biến của file trước. Khi thêm file mới, thêm vào cả `index.html` và danh sách `SHELL` trong `sw.js`. **Mỗi lần sửa bất kỳ file nào, tăng số `CACHE` trong `sw.js`**, nếu không máy đã cài sẽ tiếp tục dùng bản cũ trong cache.
+
+### Lưu trữ trên máy
+
+- Bản chính nằm trong **IndexedDB** (database `ggym`), chứa được nhiều hơn giới hạn khoảng 5 MB của `localStorage`.
+- `localStorage` vẫn được ghi song song làm bản dự phòng khi còn chỗ. Mỗi lần lưu có dấu thời gian; lúc mở app, bản nào lưu sau cùng được dùng. Dữ liệu cũ chỉ có trong `localStorage` được chuyển sang IndexedDB tự động ở lần mở đầu tiên.
+- Mở từ màn hình chính, app xin trình duyệt bật lưu lâu dài (`navigator.storage.persist`). Trạng thái hiện ở cuối **Cài đặt → Sao lưu**.
+- Chưa bật đồng bộ Supabase thì cứ 14 ngày app nhắc xuất bản sao lưu trên tab Tập.
+- Dữ liệu của tab Safari và của app trên màn hình chính vẫn tách riêng (giới hạn của iOS); muốn dùng chung thì bật đồng bộ.
+- Các khoá `sota.*` được giữ từ tên cũ của app để không mất dữ liệu.
 
 ## Nguồn ảnh
 
