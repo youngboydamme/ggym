@@ -103,6 +103,8 @@ h2{font:700 22px/1.1 var(--fc),sans-serif;margin:28px 0 2px}
 .wk-t small{font-size:13px;color:var(--mute)}
 .wk-name{width:100%;border:0;background:none;font:700 29px/1.1 var(--fc),sans-serif;padding:4px 0;outline:none}
 .wk-stats{display:flex;gap:18px;color:var(--mute);font-size:13px}
+.rsum{flex-wrap:wrap;gap:4px 18px;margin:12px 2px 0}
+.hero p.hsum{font-weight:600;opacity:1;margin-bottom:4px}
 .wk-stats b{color:var(--ink);font:700 20px var(--fc);font-variant-numeric:tabular-nums}
 .ex-h{display:flex;align-items:center;gap:6px}
 .ex-name{flex:1;text-align:left;font-weight:700;font-size:16px;color:var(--redt);min-height:40px;line-height:1.25}
@@ -898,9 +900,9 @@ function vHome(){
  if(embed)hint=`<div class="hint"><p>Bản xem thử trong Claude: dữ liệu ở đây có thể không được giữ lại. Dùng thật thì cài bản chính lên iPhone.</p></div>`;
  else if(!standalone&&!D.settings.hintOff)hint=`<div class="hint"><p>Dùng như app: trong Safari bấm nút <b>Chia sẻ</b> → <b>Thêm vào MH chính</b>, rồi luôn mở từ biểu tượng đó (dữ liệu của tab Safari và của app là tách riêng).</p><button class="icon" data-act="hint-off" aria-label="Ẩn">${ICON.x}</button></div>`;
  const tr0=todays[0];
- const hero=tr0?`<div class="hero"><div class="hero-h"><small>Hôm nay · ${DAYF[today]}</small><button class="link" data-act="r-edit" data-id="${tr0.id}" aria-label="Sửa routine ${esc(tr0.name)}">${ICON.edit} Sửa</button></div><h3>${esc(tr0.name)}</h3><p>${tr0.items.map(it=>esc(exOf(it.exId).name.replace(/\s*\(.*\)/,''))).join(' · ')}</p><button class="btn red block" data-act="start-routine" data-id="${tr0.id}">Bắt đầu ${esc(tr0.name)}</button><button class="btn alt block" data-act="start-empty">Buổi trống</button></div>`
+ const hero=tr0?`<div class="hero"><div class="hero-h"><small>Hôm nay · ${DAYF[today]}</small><button class="link" data-act="r-edit" data-id="${tr0.id}" aria-label="Sửa routine ${esc(tr0.name)}">${ICON.edit} Sửa</button></div><h3>${esc(tr0.name)}</h3><p class="hsum">${(t=>`${t.ex} bài · ${t.n} set${t.v?' · '+fmtVol(t.v)+' kg khối lượng':''}`)(planTotals(tr0.items))}</p><p>${tr0.items.map(it=>esc(exOf(it.exId).name.replace(/\s*\(.*\)/,''))).join(' · ')}</p><button class="btn red block" data-act="start-routine" data-id="${tr0.id}">Bắt đầu ${esc(tr0.name)}</button><button class="btn alt block" data-act="start-empty">Buổi trống</button></div>`
  :`<div class="hero"><small>Hôm nay · ${DAYF[today]}</small><h3>Ngày tự do</h3><p>Không có routine nào xếp cho hôm nay.</p><button class="btn red block" data-act="start-empty">Bắt đầu buổi trống</button></div>`;
- const rcard=r=>`<div class="card rc"><div class="rc-h"><b>${esc(r.name)}</b><span class="days">${(r.days||[]).slice().sort((a,b)=>((a+6)%7)-((b+6)%7)).map(d=>DAY[d]).join(' ')}</span><button class="icon" data-act="r-edit" data-id="${r.id}" aria-label="Sửa routine">${ICON.dots}</button></div><p>${r.items.length} bài · ${r.items.reduce((a,i)=>a+i.sets,0)} set — ${r.items.slice(0,4).map(it=>esc(exOf(it.exId).name.replace(/\s*\(.*\)/,''))).join(', ')}${r.items.length>4?'…':''}</p><button class="btn block" data-act="start-routine" data-id="${r.id}">Bắt đầu</button></div>`;
+ const rcard=r=>`<div class="card rc"><div class="rc-h"><b>${esc(r.name)}</b><span class="days">${(r.days||[]).slice().sort((a,b)=>((a+6)%7)-((b+6)%7)).map(d=>DAY[d]).join(' ')}</span><button class="icon" data-act="r-edit" data-id="${r.id}" aria-label="Sửa routine">${ICON.dots}</button></div><p>${(t=>`${t.ex} bài · ${t.n} set${t.v?' · '+fmtVol(t.v)+' kg':''}`)(planTotals(r.items))} — ${r.items.slice(0,4).map(it=>esc(exOf(it.exId).name.replace(/\s*\(.*\)/,''))).join(', ')}${r.items.length>4?'…':''}</p><button class="btn block" data-act="start-routine" data-id="${r.id}">Bắt đầu</button></div>`;
  return hdr(multi()?curP().name:'GGym',avBtn(),`<button class="icon" data-act="settings" aria-label="Cài đặt">${ICON.cog}</button>`)+hint+
  `<section class="week"><div class="plates">${plates}</div><div class="wsum"><div><b>${wk.length}</b>buổi tuần này</div><div><b>${fmtVol(wk.reduce((a,w)=>a+wVol(w),0))}</b>kg volume</div><div><b>${durS(wk.reduce((a,w)=>a+(w.end-w.start),0))}</b>thời gian</div></div></section>`+
  hero+`<h2>Routine</h2>`+(todays.slice(1).concat(others).map(rcard).join('')||'')+
@@ -1178,6 +1180,13 @@ const planOf=it=>it.plan&&it.plan.length?it.plan:Array.from({length:it.sets||3},
 const planFromSets=sets=>sets.map(s=>{const o={t:s.t==='w'?'w':'n'};for(const k of FK){const v=emp(s[k])?0:fparse(k,s[k]);o[k]=v>0?v:''}return o});
 /* mục tiêu (số) → chuỗi trong ô nhập */
 const planEdit=p=>{const o={t:p.t==='w'?'w':'n'};for(const k of FK)o[k]=fv(k,p[k]);return o};
+/* tổng của routine: số bài, số set (kể cả khởi động), khối lượng dự kiến = Σ kg × reps của set thường;
+   ô để trống thì lấy số của lần tập trước (giống số mờ gợi ý) */
+function planTotals(items){let v=0,n=0;
+ for(const it of items){const prev=((exHistory(it.exId)[0])||{}).sets||[];
+  planOf(it).forEach((p,j)=>{n++;if(p.t==='w')return;const q=prev[j]||{};v+=(emp(p.w)?+q.w||0:num(p.w))*(emp(p.r)?+q.r||0:num(p.r))})}
+ return{ex:items.length,n,v}}
+const rSumHtml=t=>`<span><b>${t.ex}</b> bài</span><span><b>${t.n}</b> set</span><span><b>${fmtVol(t.v)}</b> kg khối lượng</span>`;
 function vRoutine(){const r=S.draft;
  const card=(it,i)=>{const ex=exOf(it.exId),prev=((exHistory(it.exId)[0])||{}).sets||[],F=TYS[tyOf(ex)].f,fc=fCls(F);let n=0;
   const rows=it.plan.map((p,j)=>{const q=prev[j],lab=p.t==='w'?'K':String(++n);
@@ -1185,6 +1194,7 @@ function vRoutine(){const r=S.draft;
   return `<section class="card ex"><div class="ex-h" data-lp="r"><button class="exth" data-act="exinfo" data-id="${it.exId}" aria-label="Xem cách tập">${thumb(ex)}</button><button class="ex-name" data-act="exinfo" data-id="${it.exId}">${esc(ex.name)}</button><button class="icon danger" data-act="r-del" data-i="${i}" aria-label="Bỏ bài này">${ICON.x}</button></div><div class="ex-sub">${esc(ex.group)} · ${it.plan.length} set</div><div class="row rrow hd ${fc}"><span>Set</span>${F.map(k=>`<span>${FLD[k].h}</span>`).join('')}<span></span></div>${rows}<button class="btn ghost block" data-act="r-sadd" data-i="${i}">+ Thêm set</button></section>`};
  return hdr(r.id?'Sửa routine':'Routine mới',`<button class="link" data-act="r-cancel">Huỷ</button>`,`<button class="link strong" data-act="r-save">Lưu</button>`,true)+
  `<input class="field big" data-f="rname" value="${esc(r.name)}" placeholder="Tên routine, ví dụ: Push" autocomplete="off">
+ <div class="wk-stats rsum" id="r-sum">${rSumHtml(planTotals(r.items))}</div>
  <p class="lbl">Ngày tập trong tuần</p><div class="chips">${[1,2,3,4,5,6,0].map(d=>`<button class="chip ${r.days.includes(d)?'on':''}" data-act="r-day" data-d="${d}">${DAY[d]}</button>`).join('')}</div>
  <div class="lblr"><p class="lbl">Bài tập</p>${r.items.length>1?`<button class="link strong" data-act="ro-open" data-k="r">${ICON.grip} Sắp xếp</button>`:''}</div><p class="mute small" style="margin:-4px 0 0">Số nhập ở đây sẽ điền sẵn khi bắt đầu buổi tập. Ô để trống: số mờ là kết quả lần tập trước. Chạm số thứ tự set để đổi thành set khởi động (K). Vuốt set sang trái để xoá; giữ tên bài để kéo đổi thứ tự.</p>${r.items.map(card).join('')||'<p class="empty card">Chưa có bài tập.</p>'}
  <button class="btn red block" data-act="r-add">+ Thêm bài tập</button>${r.id?`<button class="btn block danger" style="background:none" data-act="r-remove">Xoá routine</button>`:''}`}
@@ -1596,7 +1606,7 @@ document.addEventListener('input',e=>{const t=e.target,f=t.dataset.f;if(!f)retur
  else if(f==='pickq'){S.pq=t.value;$('#picklist').innerHTML=pickList()}
  else if(f==='exq'){S.q=t.value;$('#exlist').innerHTML=exListHtml()}
  else if(f==='rname'&&S.draft){S.draft.name=t.value}
- else if(f==='pv'&&S.draft){const k=t.dataset.k;if(k==='tm')t.value=typeDur(t.value);S.draft.items[t.dataset.i].plan[t.dataset.j][k]=t.value}
+ else if(f==='pv'&&S.draft){const k=t.dataset.k;if(k==='tm')t.value=typeDur(t.value);S.draft.items[t.dataset.i].plan[t.dataset.j][k]=t.value;const rs=$('#r-sum');if(rs)rs.innerHTML=rSumHtml(planTotals(S.draft.items))}
  else if(f==='refq'){S.rq=t.value;if(S.rsrc==='wger'){clearTimeout(wgT);wgT=setTimeout(wgSearch,450)}else $('#reflist').innerHTML=refList()}});
 document.addEventListener('change',async e=>{const t=e.target,f=t.dataset.f;if(f!=='imp-json'&&f!=='imp-hevy'&&f!=='imp-body')return;const file=t.files&&t.files[0];if(!file)return;
  if(f==='imp-body'){t.value='';try{await readBodyFile(file)}catch(err){toast('Không đọc được file')}return}
