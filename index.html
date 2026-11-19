@@ -117,7 +117,10 @@ h2{font:700 22px/1.1 var(--fc),sans-serif;margin:28px 0 2px}
 .row input:focus{outline:none;box-shadow:inset 0 0 0 2px var(--red);background:var(--card)}
 .setno{height:40px;border-radius:9px;font:700 17px var(--fc);color:var(--ink)}
 .setno.wu,.wu{color:var(--yel)}
-.prev{font-size:14px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.prev{font-size:14px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;display:flex;flex-direction:column;line-height:1.25;min-width:0}
+.prev>span{overflow:hidden;text-overflow:ellipsis}
+.prev .sv{font-size:12px;font-weight:700;color:var(--grn)}
+.ex-sub .xv{color:var(--grn);font-weight:600}
 .chk{width:44px;height:44px;border-radius:10px;background:var(--card2);box-shadow:inset 0 0 0 1px var(--line);display:grid;place-items:center;color:var(--mute)}
 .chk svg{width:22px;height:22px}
 .row.done{background:var(--grnbg)}
@@ -159,10 +162,21 @@ body.in-wk .tabs,body.in-wk #mini{display:none}
 #toast{position:fixed;left:50%;top:calc(var(--st) + 12px);transform:translate(-50%,-160%);background:var(--inv);color:var(--invt);box-shadow:0 6px 20px rgba(0,0,0,.3);padding:11px 18px;border-radius:12px;font-size:14px;font-weight:500;z-index:60;transition:transform .25s;max-width:90vw;text-align:center}
 #toast.show{transform:translate(-50%,0)}
 /* history */
-.heat{display:grid;grid-template-rows:repeat(7,auto);grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:3px}
-.heat i{aspect-ratio:1;border-radius:3px;background:var(--card2)}
-.heat i.on{background:var(--red)}
-.heat i.fu{opacity:.25}
+.calh{display:flex;align-items:center;justify-content:space-between;margin:-6px -6px 6px}
+.calh .icon:disabled{opacity:.25}
+.calh .fwd svg{transform:rotate(180deg)}
+.calt{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 10px;border-radius:10px;font:700 21px var(--fc)}
+.calt svg{width:18px;height:18px;color:var(--mute)}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}
+.cal .dh{font-size:12px;color:var(--mute);font-weight:600;padding-bottom:2px}
+.cal .d{width:100%;max-width:42px;aspect-ratio:1;margin:0 auto;border-radius:50%;display:grid;place-items:center;font:600 16px var(--fc);font-variant-numeric:tabular-nums;color:var(--ink)}
+.cal .d.on{background:var(--red);color:#fff;font-weight:700}
+.cal .d.td{box-shadow:inset 0 0 0 2px var(--ink)}
+.cal .d.on.td{box-shadow:inset 0 0 0 2px var(--red),inset 0 0 0 4px var(--card)}
+.cal .d.fu{color:var(--mute);opacity:.5}
+.msum{margin:10px 2px 0;font-size:13px;color:var(--mute)}
+.msum b{color:var(--ink);font:700 17px var(--fc)}
+.mlist button.on span{color:var(--redt);font-weight:700}
 .tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .tiles.t3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .tiles>div{background:var(--card);border-radius:14px;padding:12px;box-shadow:var(--sh)}
@@ -394,6 +408,7 @@ const fmtMin=ms=>{const m=Math.max(1,Math.round(ms/60000));return m>=60?Math.flo
 const durS=ms=>{if(ms<30000)return '0';const m=Math.round(ms/60000);return m>=60?Math.floor(m/60)+'g'+(m%60?pad(m%60):''):m+'p'};
 const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 const dayKey=ts=>{const d=new Date(ts);return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate()};
+const mKey=ts=>{const d=new Date(ts);return d.getFullYear()*12+d.getMonth()};
 const startOfWeek=now=>{const d=new Date(now);d.setHours(0,0,0,0);d.setDate(d.getDate()-(d.getDay()+6)%7);return d};
 const epley=(w,r)=>r<=0?0:r===1?w:w*(1+r/30);
 const ICON={
@@ -912,15 +927,20 @@ function vHome(){
 /* ---------- views: workout ---------- */
 const blank=()=>({w:'',r:'',km:'',tm:'',done:false,t:'n'});
 const prevOf=e=>{const a=D.active;return((exHistory(e.exId,a.editId,a.start)[0])||{}).sets||[]};
-function wkTotals(){let v=0,n=0;D.active.exercises.forEach(e=>e.sets.forEach(s=>{if(s.done&&s.t!=='w'){v+=num(s.w)*num(s.r);n++}}));return{v,n}}
+/* khối lượng 1 set đang tập (chỉ set thường đã xong), và của cả bài */
+const sVol=s=>s.done&&s.t!=='w'?num(s.w)*num(s.r):0;
+const eVol=e=>e.sets.reduce((a,s)=>a+sVol(s),0);
+const sVolTxt=s=>{const v=sVol(s);return v?fmtVol(v)+' kg':''};
+const eVolTxt=e=>{const v=eVol(e);return v?' · '+fmtVol(v)+' kg xong':''};
+function wkTotals(){let v=0,n=0;D.active.exercises.forEach(e=>e.sets.forEach(s=>{if(s.done&&s.t!=='w'){v+=sVol(s);n++}}));return{v,n}}
 function vWorkout(){
  const a=D.active,t=wkTotals();
  const exs=a.exercises.map((e,i)=>{const prev=prevOf(e),ex=exOf(e.exId);let n=0;
-  const F=TYS[tyOf(ex)].f,fc=fCls(F);
+  const F=TYS[tyOf(ex)].f,fc=fCls(F),hasV=F.includes('w')&&F.includes('r');
   const rows=e.sets.map((s,j)=>{const p=prev[j];const lab=s.t==='w'?'K':String(++n);
-   return `<div class="swr"><button class="swdel" data-act="setdel" data-i="${i}" data-j="${j}" tabindex="-1">Xoá</button><div class="row ${fc} ${s.done?'done':''}" data-sw="1"><button class="setno ${s.t==='w'?'wu':''}" data-act="setmenu" data-i="${i}" data-j="${j}" aria-label="Tuỳ chọn set">${lab}</button><span class="prev">${p?setTxt(p):'—'}</span>${F.map(k=>fInp('sv',k,s[k],p,i,j)).join('')}<button class="chk" data-act="check" data-i="${i}" data-j="${j}" aria-label="Xong set">${ICON.check}</button></div></div>`}).join('');
+   return `<div class="swr"><button class="swdel" data-act="setdel" data-i="${i}" data-j="${j}" tabindex="-1">Xoá</button><div class="row ${fc} ${s.done?'done':''}" data-sw="1"><button class="setno ${s.t==='w'?'wu':''}" data-act="setmenu" data-i="${i}" data-j="${j}" aria-label="Tuỳ chọn set">${lab}</button><span class="prev"><span>${p?setTxt(p):'—'}</span>${hasV&&s.done?`<small class="sv" data-sv="${i}-${j}">${sVolTxt(s)}</small>`:''}</span>${F.map(k=>fInp('sv',k,s[k],p,i,j)).join('')}<button class="chk" data-act="check" data-i="${i}" data-j="${j}" aria-label="Xong set">${ICON.check}</button></div></div>`}).join('');
   const rest=D.restBy[e.exId]!=null?D.restBy[e.exId]:D.settings.rest;
-  return `<section class="card ex"><div class="ex-h" data-lp="w"><button class="exth" data-act="exinfo" data-id="${e.exId}" aria-label="Xem cách tập">${thumb(ex)}</button><button class="ex-name" data-act="exinfo" data-id="${e.exId}">${esc(ex.name)}</button><button class="icon" data-act="exmenu" data-i="${i}" aria-label="Tuỳ chọn bài tập">${ICON.dots}</button></div><div class="ex-sub">${esc(ex.group)} · Nghỉ ${rest?fmtClock(rest):'tắt'}</div><div class="row hd ${fc}"><span>Set</span><span>Lần trước</span>${F.map(k=>`<span>${FLD[k].h}</span>`).join('')}<span></span></div>${rows}<button class="btn ghost block" data-act="addset" data-i="${i}">+ Thêm set</button></section>`}).join('');
+  return `<section class="card ex"><div class="ex-h" data-lp="w"><button class="exth" data-act="exinfo" data-id="${e.exId}" aria-label="Xem cách tập">${thumb(ex)}</button><button class="ex-name" data-act="exinfo" data-id="${e.exId}">${esc(ex.name)}</button><button class="icon" data-act="exmenu" data-i="${i}" aria-label="Tuỳ chọn bài tập">${ICON.dots}</button></div><div class="ex-sub">${esc(ex.group)} · Nghỉ ${rest?fmtClock(rest):'tắt'}${hasV?`<b class="xv" data-xv="${i}">${eVolTxt(e)}</b>`:''}</div><div class="row hd ${fc}"><span>Set</span><span>Lần trước</span>${F.map(k=>`<span>${FLD[k].h}</span>`).join('')}<span></span></div>${rows}<button class="btn ghost block" data-act="addset" data-i="${i}">+ Thêm set</button></section>`}).join('');
  return `<header class="top wk"><button class="icon" data-act="minimize" aria-label="Thu nhỏ">${ICON.down}</button><div class="wk-t"><b class="elapsed">0:00</b><small>${a.editId?'Đang sửa buổi cũ':multi()?esc(curP().name):'Thời gian'}</small></div><button class="btn red sm" data-act="finish">${a.editId?'Lưu':'Kết thúc'}</button></header>
  <input class="wk-name" data-f="wname" value="${esc(a.name)}" aria-label="Tên buổi tập" autocomplete="off">
  <div class="wk-stats"><span><b id="wk-vol">${fmtVol(t.v)}</b> kg volume</span><span><b id="wk-sets">${t.n}</b> set xong</span></div>
@@ -928,24 +948,36 @@ function vWorkout(){
  <button class="btn red block" data-act="addex">+ Thêm bài tập</button>
  <button class="btn block danger" data-act="discard" style="background:none">${a.editId?'Bỏ thay đổi':'Huỷ buổi tập'}</button>`;
 }
-function updWk(){const t=wkTotals(),v=$('#wk-vol'),n=$('#wk-sets');if(v)v.textContent=fmtVol(t.v);if(n)n.textContent=t.n}
+/* sửa số của set đã xong: cập nhật các con số khối lượng tại chỗ, không vẽ lại (để giữ bàn phím) */
+function updWk(i,j){const t=wkTotals(),v=$('#wk-vol'),n=$('#wk-sets');if(v)v.textContent=fmtVol(t.v);if(n)n.textContent=t.n;
+ const e=i!=null&&D.active.exercises[i];if(!e)return;
+ const sv=$(`[data-sv="${i}-${j}"]`);if(sv)sv.textContent=sVolTxt(e.sets[j]);const xv=$(`[data-xv="${i}"]`);if(xv)xv.textContent=eVolTxt(e)}
 
 /* ---------- views: history ---------- */
 const histSeg=()=>`<div class="seg hv"><button class="${S.hv!=='stats'?'on':''}" data-act="hv" data-k="log">Buổi tập</button><button class="${S.hv==='stats'?'on':''}" data-act="hv" data-k="stats">Thống kê</button></div>`;
 function vHistory(){
  if(S.hv==='stats')return hdr('Lịch sử',avBtn())+histSeg()+vStats();
- const ws=D.workouts,now=new Date(),tr=new Set(ws.map(w=>dayKey(w.start)));
- const st=startOfWeek(now);st.setDate(st.getDate()-7*15);let cells='';
- for(let i=0;i<112;i++){const d=new Date(st);d.setDate(st.getDate()+i);cells+=`<i class="${tr.has(dayKey(d))?'on':''}${d>now?' fu':''}"></i>`}
+ const ws=D.workouts,now=new Date(),cur=mKey(+now),lo=Math.min(cur,...ws.map(w=>mKey(w.start)));
+ if(S.hm==null||S.hm>cur||S.hm<lo)S.hm=cur;
+ const hmv=S.hm,y=Math.floor(hmv/12),m=hmv%12,mws=ws.filter(w=>mKey(w.start)===hmv);
+ /* lịch tháng: tuần bắt đầu thứ Hai, ngày có tập tô đỏ, chạm để xem buổi */
+ const byDay=new Map();for(const w of mws){const k=new Date(w.start).getDate();if(!byDay.has(k))byDay.set(k,w)}
+ const off=(new Date(y,m,1).getDay()+6)%7,nd=new Date(y,m+1,0).getDate(),tk=dayKey(+now);
+ let cells=['T2','T3','T4','T5','T6','T7','CN'].map(d=>`<span class="dh">${d}</span>`).join('')+'<span></span>'.repeat(off);
+ for(let d=1;d<=nd;d++){const dt=new Date(y,m,d),w=byDay.get(d),c=(w?'on':'')+(dayKey(+dt)===tk?' td':'')+(dt>now?' fu':'');
+  cells+=w?`<button class="d ${c}" data-act="wopen" data-id="${w.id}" aria-label="${d}/${m+1}: ${esc(w.name)}">${d}</button>`:`<span class="d ${c}">${d}</span>`}
+ const mv=mws.reduce((a,w)=>a+wVol(w),0),mt=mws.reduce((a,w)=>a+(w.end-w.start),0);
+ const cal=`<div class="card"><div class="calh"><button class="icon" data-act="hm" data-d="-1" ${hmv>lo?'':'disabled'} aria-label="Tháng trước">${ICON.back}</button><button class="calt" data-act="hm-pick">Tháng ${m+1}, ${y} ${ICON.down}</button><button class="icon fwd" data-act="hm" data-d="1" ${hmv<cur?'':'disabled'} aria-label="Tháng sau">${ICON.back}</button></div>
+  <div class="cal">${cells}</div><p class="msum">${mws.length?`<b>${mws.length}</b> buổi · <b>${fmtVol(mv)}</b> kg · <b>${durS(mt)}</b>`:'Chưa có buổi tập nào trong tháng này'}</p></div>`;
  const m30=ws.filter(w=>w.start>Date.now()-30*864e5).length;
  const W7=7*864e5;let b=startOfWeek(now).getTime()+W7,a=b-W7,streak=0;const has=(x,y)=>ws.some(w=>w.start>=x&&w.start<y);
  if(!has(a,b)){b=a;a-=W7}while(has(a,b)){streak++;b=a;a-=W7}
- let list='',mon='';
- for(const w of ws){const d=new Date(w.start),k=d.getFullYear()+'-'+d.getMonth();if(k!==mon){mon=k;list+=`<p class="mon">Tháng ${d.getMonth()+1}, ${d.getFullYear()}</p>`}
+ let list=mws.length?`<p class="mon">Các buổi tháng ${m+1}</p>`:'';
+ for(const w of mws){
   const prs=(w.prs||[]).length;
   list+=`<div class="card wc" data-act="wopen" data-id="${w.id}" role="button" tabindex="0"><div class="wc-h"><b>${esc(w.name)}</b><span>${fmtDate(w.start)} · ${hm(w.start)}</span></div><div class="wc-m"><span>${fmtMin(w.end-w.start)}</span><span>${fmtVol(wVol(w))} kg</span><span>${wSets(w)} set</span>${prs?`<span class="pr">${prs} kỷ lục</span>`:''}</div><ul>${w.exercises.slice(0,5).map(e=>{const bb=best(e.sets).top;return `<li><span>${e.sets.filter(s=>s.t!=='w').length} × ${esc(exOf(e.exId).name)}</span><small>${bb?setTxt(bb):''}</small></li>`}).join('')}${w.exercises.length>5?`<li><small>+${w.exercises.length-5} bài khác</small></li>`:''}</ul></div>`}
- return hdr('Lịch sử',avBtn())+histSeg()+`<div class="card"><div class="heat" aria-label="16 tuần gần nhất">${cells}</div></div><div class="tiles t3" style="margin-top:8px"><div><b>${ws.length}</b><span>tổng số buổi</span></div><div><b>${m30}</b><span>buổi / 30 ngày</span></div><div><b>${streak}</b><span>tuần liên tiếp</span></div></div>`+
- (list||`<p class="empty">Chưa có buổi tập nào.<br>Bắt đầu ở tab Tập, hoặc nhập lịch sử từ Hevy trong Cài đặt.</p>`);
+ return hdr('Lịch sử',avBtn())+histSeg()+cal+`<div class="tiles t3" style="margin-top:8px"><div><b>${ws.length}</b><span>tổng số buổi</span></div><div><b>${m30}</b><span>buổi / 30 ngày</span></div><div><b>${streak}</b><span>tuần liên tiếp</span></div></div>`+
+ (list||(ws.length?`<p class="empty">Tháng ${m+1} chưa có buổi tập nào.${hmv>lo?'<br>Bấm ‹ hoặc tên tháng để xem các tháng trước.':''}</p>`:`<p class="empty">Chưa có buổi tập nào.<br>Bắt đầu ở tab Tập, hoặc nhập lịch sử từ Hevy trong Cài đặt.</p>`));
 }
 
 /* ---------- views: thống kê ---------- */
@@ -1228,7 +1260,7 @@ function doFinish(){
   exercises:a.exercises.map(e=>({exId:e.exId,sets:e.sets.filter(s=>s.done).map(s=>packSet(s,tyId(e.exId)))})).filter(e=>e.sets.length)};
  w.prs=computePRs(w);
  D.workouts=D.workouts.filter(x=>x.id!==w.id);D.workouts.push(w);D.workouts.sort((x,y)=>y.start-x.start);
- D.active=null;save();S.view=null;S.tab='history';render();scrollTo(0,0);summary(w);
+ D.active=null;save();S.view=null;S.tab='history';S.hv='log';S.hm=mKey(w.start);render();scrollTo(0,0);summary(w);
 }
 function summary(w){const prs=w.prs||[];
  sheet(`<p class="lbl" style="margin-top:4px">Đã lưu buổi tập</p><h3>${esc(w.name)}</h3><div class="tiles t3"><div><b>${durS(w.end-w.start)||'1p'}</b><span>thời gian</span></div><div><b>${fmtVol(wVol(w))}</b><span>kg volume</span></div><div><b>${wSets(w)}</b><span>set</span></div></div>
@@ -1555,6 +1587,12 @@ const A={
  exedit:()=>exSheet(exOf(S.exId)),
  met:d=>{S.met=d.k;render()},
  hv:d=>{S.hv=d.k;render();scrollTo(0,0)},
+ hm:d=>{S.hm+=+d.d;render()},
+ 'hm-pick':()=>{const c=new Map();for(const w of D.workouts){const k=mKey(w.start);c.set(k,(c.get(k)||0)+1)}const cur=mKey(Date.now());if(!c.has(cur))c.set(cur,0);
+  const ks=[...c.keys()].sort((a,b)=>b-a);let yr=null,h='';
+  for(const k of ks){const y=Math.floor(k/12);if(y!==yr){yr=y;h+=`<p class="pg">${y}</p>`}h+=`<button data-act="hm-set" data-k="${k}" class="${k===S.hm?'on':''}"><span>Tháng ${k%12+1}${k===cur?' (tháng này)':''}</span><small>${c.get(k)?c.get(k)+' buổi':'—'}</small></button>`}
+  sheet(`<h3>Chọn tháng</h3><div class="plist mlist">${h}</div>`,'tall')},
+ 'hm-set':d=>{S.hm=+d.k;closeSheet();render();scrollTo(0,0)},
  sp:d=>{S.sp=+d.k;render()},
  sm:d=>{S.sm=d.k;render()},
  bm:d=>{S.bm=d.k;render()},
@@ -1601,7 +1639,7 @@ const A={
 document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const f=A[b.dataset.act];if(f){e.preventDefault();unlockAudio();f(b.dataset,b,e)}});
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[role=button][data-act]')){e.preventDefault();e.target.click()}});
 document.addEventListener('input',e=>{const t=e.target,f=t.dataset.f;if(!f)return;
- if(f==='sv'&&D.active){const k=t.dataset.k,s=D.active.exercises[t.dataset.i].sets[t.dataset.j];if(k==='tm')t.value=typeDur(t.value);s[k]=t.value;save();if(s.done)updWk()}
+ if(f==='sv'&&D.active){const k=t.dataset.k,s=D.active.exercises[t.dataset.i].sets[t.dataset.j];if(k==='tm')t.value=typeDur(t.value);s[k]=t.value;save();if(s.done)updWk(+t.dataset.i,+t.dataset.j)}
  else if(f==='wname'&&D.active){D.active.name=t.value;save()}
  else if(f==='pickq'){S.pq=t.value;$('#picklist').innerHTML=pickList()}
  else if(f==='exq'){S.q=t.value;$('#exlist').innerHTML=exListHtml()}
